@@ -22,3 +22,19 @@ func (r *Repository) CreateUser(_ *domain.User) error          { return errNotIm
 func (r *Repository) GetUserByEmail(_ string) (*domain.User, error) { return nil, errNotImplemented }
 func (r *Repository) GetUserByID(_ string) (*domain.User, error)    { return nil, errNotImplemented }
 func (r *Repository) UpdateUser(_ *domain.User) error          { return errNotImplemented }
+
+func (r *Repository) CreatePost(_ *domain.Post) error {
+	return errNotImplemented
+}
+
+func (r *Repository) ListPosts(_ string) ([]domain.PublicPost, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) GetPostByID(_ string) (*domain.Post, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) CreateReport(_ *domain.Report) error {
+	return errNotImplemented
+}

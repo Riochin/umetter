@@ -19,9 +19,14 @@ func New(repo repository.Repository, cfg *config.Config) *gin.Engine {
 	auth.POST("/login", authH.Login)
 
 	meH := handler.NewMeHandler(repo)
+	postH := handler.NewPostHandler(repo)
+
 	protected := v1.Group("")
 	protected.Use(middleware.JWTAuth(cfg.JWTSecret))
 	protected.GET("/me", meH.GetMe)
+	protected.GET("/posts", postH.ListPosts)
+	protected.POST("/posts", postH.CreatePost)
+	protected.POST("/posts/:id/report", postH.ReportPost)
 
 	return r
 }

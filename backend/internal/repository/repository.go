@@ -9,4 +9,9 @@ type Repository interface {
 	GetUserByEmail(email string) (*domain.User, error)
 	GetUserByID(id string) (*domain.User, error)
 	UpdateUser(user *domain.User) error
+
+	CreatePost(post *domain.Post) error
+	ListPosts(category string) ([]domain.PublicPost, error)
+	GetPostByID(id string) (*domain.Post, error)
+	CreateReport(report *domain.Report) error
 }
