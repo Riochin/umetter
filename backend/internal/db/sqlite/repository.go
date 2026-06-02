@@ -75,3 +75,123 @@ func scanUser(row *sql.Row) (*domain.User, error) {
 	}
 	return u, nil
 }
+
+func (r *Repository) CreatePost(post *domain.Post) error {
+	_, err := r.db.Exec(
+		`INSERT INTO posts
+			(id, author_id, post_type, category, body, attachment_url, is_pinned)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		post.ID,
+		post.AuthorID,
+		post.PostType,
+		post.Category,
+		post.Body,
+		post.AttachmentURL,
+		boolToInt(post.IsPinned),
+	)
+	if err != nil {
+		return fmt.Errorf("create post: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) ListPosts(category string) ([]domain.PublicPost, error) {
+	query := `SELECT id, post_type, category, body, attachment_url, is_pinned, created_at
+	          FROM posts`
+	args := []any{}
+
+	if category != "" && category != "all" {
+		query += ` WHERE category = ?`
+		args = append(args, category)
+	}
+
+	query += ` ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list posts: %w", err)
+	}
+	defer rows.Close()
+
+	posts := []domain.PublicPost{}
+	for rows.Next() {
+		var p domain.PublicPost
+		var isPinned int
+
+		if err := rows.Scan(
+			&p.ID,
+			&p.PostType,
+			&p.Category,
+			&p.Body,
+			&p.AttachmentURL,
+			&isPinned,
+			&p.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan post: %w", err)
+		}
+
+		p.IsPinned = isPinned == 1
+		posts = append(posts, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate posts: %w", err)
+	}
+
+	return posts, nil
+}
+
+func (r *Repository) GetPostByID(id string) (*domain.Post, error) {
+	row := r.db.QueryRow(
+		`SELECT id, author_id, post_type, category, body, attachment_url, is_pinned, created_at
+		 FROM posts
+		 WHERE id = ?`,
+		id,
+	)
+
+	var p domain.Post
+	var isPinned int
+
+	err := row.Scan(
+		&p.ID,
+		&p.AuthorID,
+		&p.PostType,
+		&p.Category,
+		&p.Body,
+		&p.AttachmentURL,
+		&isPinned,
+		&p.CreatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scan post: %w", err)
+	}
+
+	p.IsPinned = isPinned == 1
+	return &p, nil
+}
+
+func (r *Repository) CreateReport(report *domain.Report) error {
+	_, err := r.db.Exec(
+		`INSERT INTO reports
+			(id, post_id, reporter_id, reason)
+		 VALUES (?, ?, ?, ?)`,
+		report.ID,
+		report.PostID,
+		report.ReporterID,
+		report.Reason,
+	)
+	if err != nil {
+		return fmt.Errorf("create report: %w", err)
+	}
+	return nil
+}
+
+func boolToInt(v bool) int {
+	if v {
+		return 1
+	}
+	return 0
+}
