@@ -10,18 +10,31 @@ import (
 	"github.com/google/uuid"
 	"github.com/irj0927/umetter/internal/config"
 	"github.com/irj0927/umetter/internal/domain"
+	"github.com/irj0927/umetter/internal/mailer"
 	"github.com/irj0927/umetter/internal/middleware"
 	"github.com/irj0927/umetter/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
-	repo repository.Repository
-	cfg  *config.Config
+	repo   repository.Repository
+	cfg    *config.Config
+	mailer *mailer.Mailer
 }
 
 func NewAuthHandler(repo repository.Repository, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{repo: repo, cfg: cfg}
+	return &AuthHandler{
+		repo: repo,
+		cfg:  cfg,
+		mailer: &mailer.Mailer{
+			SMTPHost: cfg.SMTPHost,
+			SMTPPort: cfg.SMTPPort,
+			SMTPUser: cfg.SMTPUser,
+			SMTPPass: cfg.SMTPPass,
+			From:     cfg.SMTPFrom,
+			Debug:    cfg.EmailDebug,
+		},
+	}
 }
 
 type registerRequest struct {
@@ -155,11 +168,21 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{
-		"message":    "verification code generated",
-		"email":      email,
-		"debug_code": code,
-	})
+	if err := h.mailer.SendVerificationCode(email, code); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send verification email"})
+		return
+	}
+
+	resp := gin.H{
+		"message": "verification code sent",
+		"email":   email,
+	}
+
+	if h.cfg.EmailDebug {
+		resp["debug_code"] = code
+	}
+
+	c.JSON(http.StatusAccepted, resp)
 }
 
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {

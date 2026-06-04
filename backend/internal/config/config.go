@@ -17,6 +17,13 @@ type Config struct {
 	JWTSecret      string
 	JWTExpireHours int
 	Port           string
+
+	EmailDebug bool
+	SMTPHost   string
+	SMTPPort   string
+	SMTPUser   string
+	SMTPPass   string
+	SMTPFrom   string
 }
 
 func Load() (*Config, error) {
@@ -51,6 +58,25 @@ func Load() (*Config, error) {
 		port = "8080"
 	}
 
+	emailDebug := true
+	if s := os.Getenv("EMAIL_DEBUG"); s != "" {
+		v, err := strconv.ParseBool(s)
+		if err != nil {
+			return nil, fmt.Errorf("invalid EMAIL_DEBUG: %w", err)
+		}
+		emailDebug = v
+	}
+
+	smtpPort := os.Getenv("SMTP_PORT")
+	if smtpPort == "" {
+		smtpPort = "587"
+	}
+
+	smtpFrom := os.Getenv("SMTP_FROM")
+	if smtpFrom == "" {
+		smtpFrom = os.Getenv("SMTP_USER")
+	}
+
 	return &Config{
 		DBDriver:       driver,
 		DBPath:         dbPath,
@@ -60,5 +86,12 @@ func Load() (*Config, error) {
 		JWTSecret:      secret,
 		JWTExpireHours: expireHours,
 		Port:           port,
+
+		EmailDebug: emailDebug,
+		SMTPHost:   os.Getenv("SMTP_HOST"),
+		SMTPPort:   smtpPort,
+		SMTPUser:   os.Getenv("SMTP_USER"),
+		SMTPPass:   os.Getenv("SMTP_PASS"),
+		SMTPFrom:   smtpFrom,
 	}, nil
 }

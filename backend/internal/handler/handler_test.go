@@ -24,6 +24,7 @@ func newTestApp(t *testing.T) *gin.Engine {
 		JWTSecret:      "test-secret-handler",
 		JWTExpireHours: 1,
 		Port:           "8080",
+		EmailDebug:     true,
 	}
 
 	sqlDB, err := db.Open(cfg)
