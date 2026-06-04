@@ -18,10 +18,10 @@ func NewRepository(cfg *config.Config) *Repository {
 
 var errNotImplemented = errors.New("D1 repository not implemented yet (Sprint 4)")
 
-func (r *Repository) CreateUser(_ *domain.User) error          { return errNotImplemented }
+func (r *Repository) CreateUser(_ *domain.User) error               { return errNotImplemented }
 func (r *Repository) GetUserByEmail(_ string) (*domain.User, error) { return nil, errNotImplemented }
 func (r *Repository) GetUserByID(_ string) (*domain.User, error)    { return nil, errNotImplemented }
-func (r *Repository) UpdateUser(_ *domain.User) error          { return errNotImplemented }
+func (r *Repository) UpdateUser(_ *domain.User) error               { return errNotImplemented }
 
 func (r *Repository) CreatePost(_ *domain.Post) error {
 	return errNotImplemented
@@ -37,4 +37,24 @@ func (r *Repository) GetPostByID(_ string) (*domain.Post, error) {
 
 func (r *Repository) CreateReport(_ *domain.Report) error {
 	return errNotImplemented
+}
+
+func (r *Repository) IsTeacherAllowedEmail(_ string) (bool, error) {
+	return false, errNotImplemented
+}
+
+func (r *Repository) SaveEmailVerificationCode(_ string, _ string, _ string) error {
+	return errNotImplemented
+}
+
+func (r *Repository) GetEmailVerificationCodeHash(_ string) (string, string, error) {
+	return "", "", errNotImplemented
+}
+
+func (r *Repository) MarkEmailVerified(_ string) error {
+	return errNotImplemented
+}
+
+func (r *Repository) IsEmailVerified(_ string) (bool, error) {
+	return false, errNotImplemented
 }

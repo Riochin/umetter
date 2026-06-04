@@ -195,3 +195,93 @@ func boolToInt(v bool) int {
 	}
 	return 0
 }
+
+func (r *Repository) IsTeacherAllowedEmail(email string) (bool, error) {
+	var exists int
+	err := r.db.QueryRow(
+		`SELECT 1 FROM teacher_allowed_emails WHERE email = ? LIMIT 1`,
+		email,
+	).Scan(&exists)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("check teacher allowed email: %w", err)
+	}
+	return true, nil
+}
+
+func (r *Repository) SaveEmailVerificationCode(email string, codeHash string, expiresAt string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO email_verification_codes (email, code_hash, purpose, expires_at)
+		 VALUES (?, ?, 'register', ?)
+		 ON CONFLICT(email) DO UPDATE SET
+		     code_hash = excluded.code_hash,
+		     expires_at = excluded.expires_at,
+		     created_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')`,
+		email,
+		codeHash,
+		expiresAt,
+	)
+	if err != nil {
+		return fmt.Errorf("save email verification code: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) GetEmailVerificationCodeHash(email string) (string, string, error) {
+	var codeHash string
+	var expiresAt string
+
+	err := r.db.QueryRow(
+		`SELECT code_hash, expires_at
+		 FROM email_verification_codes
+		 WHERE email = ?`,
+		email,
+	).Scan(&codeHash, &expiresAt)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", "", nil
+	}
+	if err != nil {
+		return "", "", fmt.Errorf("get email verification code: %w", err)
+	}
+	return codeHash, expiresAt, nil
+}
+
+func (r *Repository) MarkEmailVerified(email string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO verified_emails (email, verified_at)
+		 VALUES (?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+		 ON CONFLICT(email) DO UPDATE SET
+		     verified_at = excluded.verified_at`,
+		email,
+	)
+	if err != nil {
+		return fmt.Errorf("mark email verified: %w", err)
+	}
+
+	_, err = r.db.Exec(`DELETE FROM email_verification_codes WHERE email = ?`, email)
+	if err != nil {
+		return fmt.Errorf("delete email verification code: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) IsEmailVerified(email string) (bool, error) {
+	var exists int
+	err := r.db.QueryRow(
+		`SELECT 1 FROM verified_emails WHERE email = ? LIMIT 1`,
+		email,
+	).Scan(&exists)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("check email verified: %w", err)
+	}
+	return true, nil
+}
