@@ -7,6 +7,7 @@
   - `002_teacher_email_verification.sql` … 教員メール許可リスト・メール確認
   - `003_seed_classes.sql` … 授業マスタの開発用シード
   - `004_align_design_schema.sql` … 当初ER設計に合わせた追加カラム（classes.class_code/semester, user_timetables.created_at, friendships.updated_at）
+  - `005_class_syllabus_fields.sql` … 学芸学部時間割スプレッドシート対応（classes.term/level/credits/remarks, class_enrollment_permissions）
 - マイグレーション管理: `migrations/*.sql` をファイル名順に**一度だけ**適用し、適用済みを `schema_migrations` テーブルで記録する（`ALTER TABLE ADD COLUMN` 等の非冪等な文も安全）。
 - 共通方針: 主キーは `TEXT`（UUID）。日時は `TEXT`（RFC3339 / `strftime` のUTC文字列）。真偽値は `INTEGER`（0/1）。
 
@@ -39,16 +40,29 @@ erDiagram
         text created_at
     }
 
+    classes ||--o{ class_enrollment_permissions : "履修可否を持つ"
+
     classes {
         text id PK
-        text class_code "任意・設定時のみ一意"
+        text class_code "時間割コード・任意/一意"
         text name
         text teacher_name
         int  day_of_week "1..6"
         int  period "1..6"
         text room
+        text term "開講期 T1/T134 等"
         text semester "first|second|full|空"
+        text level "程度 I/II/III"
+        int  credits "単位"
+        text remarks "備考"
         int  is_canceled "0|1"
+    }
+
+    class_enrollment_permissions {
+        text class_id PK, FK
+        text audience PK "学科/科目等履修生/聴講生"
+        text permission "allowed|conditional|denied"
+        text note
     }
 
     user_timetables {
@@ -158,14 +172,28 @@ erDiagram
 | カラム | 型 | 備考 |
 |---|---|---|
 | `id` | TEXT | PK |
-| `class_code` | TEXT | 授業コード（任意）。空文字は重複可、設定済みの値のみ一意（部分インデックス） |
+| `class_code` | TEXT | 時間割コード（例 `EL001A02`）。空文字は重複可、設定済みの値のみ一意（部分インデックス） |
 | `name` | TEXT | 授業名 |
 | `teacher_name` | TEXT | 教員名 |
 | `day_of_week` | INTEGER | 1（月）〜6（土） |
 | `period` | INTEGER | 1〜6限 |
 | `room` | TEXT | 教室 |
-| `semester` | TEXT | `first`（前期）/ `second`（後期）/ `full`（通年）/ 空文字（未設定） |
+| `term` | TEXT | 開講期（ターム）。`T1` / `T134` 等の生値 |
+| `semester` | TEXT | `first`（前期）/ `second`（後期）/ `full`（通年）/ 空文字（未設定）。`term` の粗い分類（任意） |
+| `level` | TEXT | 程度（`I` / `II` / `III` 等） |
+| `credits` | INTEGER | 単位数 |
+| `remarks` | TEXT | 備考（ペア授業・集中講義日程等） |
 | `is_canceled` | INTEGER | 休講フラグ 0/1 |
+
+### class_enrollment_permissions
+授業ごとの学科別履修可否マトリクス（時間割スプレッドシートの ○/△/× 列）。`PRIMARY KEY(class_id, audience)`。
+
+| カラム | 型 | 備考 |
+|---|---|---|
+| `class_id` | TEXT | FK → classes(id)。ON DELETE CASCADE |
+| `audience` | TEXT | `english`(英文) / `international`(国際) / `multicultural`(多文化) / `mathematics`(数学) / `information`(情報) / `integrated`(総合) / `credit_auditor`(科目等履修生) / `auditor`(聴講生) |
+| `permission` | TEXT | `allowed`（○）/ `conditional`（△）/ `denied`（×） |
+| `note` | TEXT | 補足（履修希望時の注意事項等） |
 
 ### user_timetables
 ユーザー × 授業の登録。出欠カウント・自由メモ・登録時刻（`created_at`）を持つ。`UNIQUE(user_id, class_id)` で同一授業の重複登録を防止。
@@ -199,3 +227,4 @@ erDiagram
 | `idx_posts_category` | `posts(category)` |
 | `idx_notifications_user` | `notifications(user_id, is_read, created_at DESC)` |
 | `idx_classes_class_code` | `classes(class_code) WHERE class_code <> ''`（部分ユニーク） |
+| `idx_class_enroll_audience` | `class_enrollment_permissions(audience, permission)` |

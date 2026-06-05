@@ -340,20 +340,28 @@
 ```json
 {
   "id": "cls-eng1",
-  "class_code": "",
+  "class_code": "EL001A02",
   "name": "英語コミュニケーションI",
   "teacher_name": "山田 花子",
   "day_of_week": 1,
   "period": 1,
   "room": "本館101",
+  "term": "T1",
   "semester": "",
+  "level": "I",
+  "credits": 1,
+  "remarks": "",
   "is_canceled": false
 }
 ```
 - `day_of_week`: 1（月）〜6（土）
 - `period`: 1〜6限
-- `class_code`: 授業コード（任意）
+- `class_code`: 時間割コード（任意）
+- `term`: 開講期（ターム）。`T1` / `T134` 等の生値
 - `semester`: `first`（前期）/ `second`（後期）/ `full`（通年）/ `""`（未設定）
+- `level`: 程度（`I`/`II`/`III` 等） ／ `credits`: 単位数 ／ `remarks`: 備考
+
+> 学科別の履修可否は別テーブル `class_enrollment_permissions` で保持（[database.md](./database.md) 参照）。専用 API は未実装。
 
 ### TimetableEntry
 
@@ -369,7 +377,11 @@
   "day_of_week": 1,
   "period": 1,
   "room": "本館101",
+  "term": "T1",
   "semester": "",
+  "level": "I",
+  "credits": 1,
+  "remarks": "",
   "is_canceled": false,
   "memo": "1限つらい",
   "count_present": 3,

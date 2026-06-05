@@ -194,7 +194,8 @@ func (r *Repository) CreateReport(report *domain.Report) error {
 // ---------------------------------------------------------------------------
 
 func (r *Repository) SearchClasses(keyword string) ([]domain.Class, error) {
-	query := `SELECT id, class_code, name, teacher_name, day_of_week, period, room, semester, is_canceled
+	query := `SELECT id, class_code, name, teacher_name, day_of_week, period, room,
+	                 term, semester, level, credits, remarks, is_canceled
 	          FROM classes`
 	args := []any{}
 
@@ -228,7 +229,8 @@ func (r *Repository) SearchClasses(keyword string) ([]domain.Class, error) {
 
 func (r *Repository) GetClassByID(id string) (*domain.Class, error) {
 	row := r.db.QueryRow(
-		`SELECT id, class_code, name, teacher_name, day_of_week, period, room, semester, is_canceled
+		`SELECT id, class_code, name, teacher_name, day_of_week, period, room,
+		        term, semester, level, credits, remarks, is_canceled
 		 FROM classes WHERE id = ?`, id,
 	)
 	c, err := scanClass(row)
@@ -247,7 +249,8 @@ func scanClass(s interface{ Scan(...any) error }) (*domain.Class, error) {
 	var isCanceled int
 	if err := s.Scan(
 		&c.ID, &c.ClassCode, &c.Name, &c.TeacherName,
-		&c.DayOfWeek, &c.Period, &c.Room, &c.Semester, &isCanceled,
+		&c.DayOfWeek, &c.Period, &c.Room,
+		&c.Term, &c.Semester, &c.Level, &c.Credits, &c.Remarks, &isCanceled,
 	); err != nil {
 		return nil, err
 	}
@@ -272,7 +275,8 @@ func (r *Repository) CreateTimetableEntry(e *domain.UserTimetable) error {
 func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, error) {
 	rows, err := r.db.Query(
 		`SELECT t.id, c.id, c.class_code, c.name, c.teacher_name, c.day_of_week, c.period,
-		        c.room, c.semester, c.is_canceled, t.memo, t.count_present, t.count_absent, t.count_late, t.created_at
+		        c.room, c.term, c.semester, c.level, c.credits, c.remarks, c.is_canceled,
+		        t.memo, t.count_present, t.count_absent, t.count_late, t.created_at
 		 FROM user_timetables t
 		 JOIN classes c ON c.id = t.class_id
 		 WHERE t.user_id = ?
@@ -289,7 +293,8 @@ func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, erro
 		var isCanceled int
 		if err := rows.Scan(
 			&e.ID, &e.ClassID, &e.ClassCode, &e.Name, &e.TeacherName, &e.DayOfWeek, &e.Period,
-			&e.Room, &e.Semester, &isCanceled, &e.Memo, &e.CountPresent, &e.CountAbsent, &e.CountLate, &e.CreatedAt,
+			&e.Room, &e.Term, &e.Semester, &e.Level, &e.Credits, &e.Remarks, &isCanceled,
+			&e.Memo, &e.CountPresent, &e.CountAbsent, &e.CountLate, &e.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan timetable entry: %w", err)
 		}

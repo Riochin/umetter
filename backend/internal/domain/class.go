@@ -9,7 +9,11 @@ type Class struct {
 	DayOfWeek   int    `json:"day_of_week"`
 	Period      int    `json:"period"`
 	Room        string `json:"room"`
+	Term        string `json:"term"`
 	Semester    string `json:"semester"`
+	Level       string `json:"level"`
+	Credits     int    `json:"credits"`
+	Remarks     string `json:"remarks"`
 	IsCanceled  bool   `json:"is_canceled"`
 }
 
@@ -36,7 +40,11 @@ type TimetableEntry struct {
 	DayOfWeek    int    `json:"day_of_week"`
 	Period       int    `json:"period"`
 	Room         string `json:"room"`
+	Term         string `json:"term"`
 	Semester     string `json:"semester"`
+	Level        string `json:"level"`
+	Credits      int    `json:"credits"`
+	Remarks      string `json:"remarks"`
 	IsCanceled   bool   `json:"is_canceled"`
 	Memo         string `json:"memo"`
 	CountPresent int    `json:"count_present"`
