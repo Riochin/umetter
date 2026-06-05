@@ -194,7 +194,7 @@ func (r *Repository) CreateReport(report *domain.Report) error {
 // ---------------------------------------------------------------------------
 
 func (r *Repository) SearchClasses(keyword string) ([]domain.Class, error) {
-	query := `SELECT id, name, teacher_name, day_of_week, period, room, is_canceled
+	query := `SELECT id, class_code, name, teacher_name, day_of_week, period, room, semester, is_canceled
 	          FROM classes`
 	args := []any{}
 
@@ -228,7 +228,7 @@ func (r *Repository) SearchClasses(keyword string) ([]domain.Class, error) {
 
 func (r *Repository) GetClassByID(id string) (*domain.Class, error) {
 	row := r.db.QueryRow(
-		`SELECT id, name, teacher_name, day_of_week, period, room, is_canceled
+		`SELECT id, class_code, name, teacher_name, day_of_week, period, room, semester, is_canceled
 		 FROM classes WHERE id = ?`, id,
 	)
 	c, err := scanClass(row)
@@ -246,8 +246,8 @@ func scanClass(s interface{ Scan(...any) error }) (*domain.Class, error) {
 	var c domain.Class
 	var isCanceled int
 	if err := s.Scan(
-		&c.ID, &c.Name, &c.TeacherName,
-		&c.DayOfWeek, &c.Period, &c.Room, &isCanceled,
+		&c.ID, &c.ClassCode, &c.Name, &c.TeacherName,
+		&c.DayOfWeek, &c.Period, &c.Room, &c.Semester, &isCanceled,
 	); err != nil {
 		return nil, err
 	}
@@ -258,8 +258,8 @@ func scanClass(s interface{ Scan(...any) error }) (*domain.Class, error) {
 func (r *Repository) CreateTimetableEntry(e *domain.UserTimetable) error {
 	_, err := r.db.Exec(
 		`INSERT INTO user_timetables
-			(id, user_id, class_id, memo, count_present, count_absent, count_late)
-		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			(id, user_id, class_id, memo, count_present, count_absent, count_late, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`,
 		e.ID, e.UserID, e.ClassID, e.Memo,
 		e.CountPresent, e.CountAbsent, e.CountLate,
 	)
@@ -271,8 +271,8 @@ func (r *Repository) CreateTimetableEntry(e *domain.UserTimetable) error {
 
 func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, error) {
 	rows, err := r.db.Query(
-		`SELECT t.id, c.id, c.name, c.teacher_name, c.day_of_week, c.period,
-		        c.room, c.is_canceled, t.memo, t.count_present, t.count_absent, t.count_late
+		`SELECT t.id, c.id, c.class_code, c.name, c.teacher_name, c.day_of_week, c.period,
+		        c.room, c.semester, c.is_canceled, t.memo, t.count_present, t.count_absent, t.count_late, t.created_at
 		 FROM user_timetables t
 		 JOIN classes c ON c.id = t.class_id
 		 WHERE t.user_id = ?
@@ -288,8 +288,8 @@ func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, erro
 		var e domain.TimetableEntry
 		var isCanceled int
 		if err := rows.Scan(
-			&e.ID, &e.ClassID, &e.Name, &e.TeacherName, &e.DayOfWeek, &e.Period,
-			&e.Room, &isCanceled, &e.Memo, &e.CountPresent, &e.CountAbsent, &e.CountLate,
+			&e.ID, &e.ClassID, &e.ClassCode, &e.Name, &e.TeacherName, &e.DayOfWeek, &e.Period,
+			&e.Room, &e.Semester, &isCanceled, &e.Memo, &e.CountPresent, &e.CountAbsent, &e.CountLate, &e.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan timetable entry: %w", err)
 		}
@@ -304,13 +304,13 @@ func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, erro
 
 func (r *Repository) GetTimetableEntryByID(id string) (*domain.UserTimetable, error) {
 	row := r.db.QueryRow(
-		`SELECT id, user_id, class_id, memo, count_present, count_absent, count_late
+		`SELECT id, user_id, class_id, memo, count_present, count_absent, count_late, created_at
 		 FROM user_timetables WHERE id = ?`, id,
 	)
 	var e domain.UserTimetable
 	err := row.Scan(
 		&e.ID, &e.UserID, &e.ClassID, &e.Memo,
-		&e.CountPresent, &e.CountAbsent, &e.CountLate,
+		&e.CountPresent, &e.CountAbsent, &e.CountLate, &e.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -340,8 +340,8 @@ func (r *Repository) UpdateTimetableEntry(e *domain.UserTimetable) error {
 
 func (r *Repository) CreateFriendship(f *domain.Friendship) error {
 	_, err := r.db.Exec(
-		`INSERT INTO friendships (id, requester_id, addressee_id, status)
-		 VALUES (?, ?, ?, ?)`,
+		`INSERT INTO friendships (id, requester_id, addressee_id, status, updated_at)
+		 VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`,
 		f.ID, f.RequesterID, f.AddresseeID, f.Status,
 	)
 	if err != nil {
@@ -352,7 +352,7 @@ func (r *Repository) CreateFriendship(f *domain.Friendship) error {
 
 func (r *Repository) GetFriendshipByID(id string) (*domain.Friendship, error) {
 	row := r.db.QueryRow(
-		`SELECT id, requester_id, addressee_id, status, created_at
+		`SELECT id, requester_id, addressee_id, status, created_at, updated_at
 		 FROM friendships WHERE id = ?`, id,
 	)
 	return scanFriendship(row)
@@ -360,7 +360,7 @@ func (r *Repository) GetFriendshipByID(id string) (*domain.Friendship, error) {
 
 func (r *Repository) UpdateFriendshipStatus(id, status string) error {
 	_, err := r.db.Exec(
-		`UPDATE friendships SET status = ? WHERE id = ?`, status, id,
+		`UPDATE friendships SET status = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`, status, id,
 	)
 	if err != nil {
 		return fmt.Errorf("update friendship status: %w", err)
@@ -370,7 +370,7 @@ func (r *Repository) UpdateFriendshipStatus(id, status string) error {
 
 func (r *Repository) ListFriendships(userID string) ([]domain.Friendship, error) {
 	rows, err := r.db.Query(
-		`SELECT id, requester_id, addressee_id, status, created_at
+		`SELECT id, requester_id, addressee_id, status, created_at, updated_at
 		 FROM friendships
 		 WHERE requester_id = ? OR addressee_id = ?
 		 ORDER BY created_at DESC`, userID, userID,
@@ -384,7 +384,7 @@ func (r *Repository) ListFriendships(userID string) ([]domain.Friendship, error)
 	for rows.Next() {
 		var f domain.Friendship
 		if err := rows.Scan(
-			&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt,
+			&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt, &f.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan friendship: %w", err)
 		}
@@ -398,7 +398,7 @@ func (r *Repository) ListFriendships(userID string) ([]domain.Friendship, error)
 
 func (r *Repository) GetApprovedFriendship(userA, userB string) (*domain.Friendship, error) {
 	row := r.db.QueryRow(
-		`SELECT id, requester_id, addressee_id, status, created_at
+		`SELECT id, requester_id, addressee_id, status, created_at, updated_at
 		 FROM friendships
 		 WHERE status = 'approved'
 		   AND ((requester_id = ? AND addressee_id = ?)
@@ -411,7 +411,7 @@ func (r *Repository) GetApprovedFriendship(userA, userB string) (*domain.Friends
 func scanFriendship(row *sql.Row) (*domain.Friendship, error) {
 	var f domain.Friendship
 	err := row.Scan(
-		&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt,
+		&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt, &f.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
