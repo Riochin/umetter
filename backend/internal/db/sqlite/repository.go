@@ -189,6 +189,239 @@ func (r *Repository) CreateReport(report *domain.Report) error {
 	return nil
 }
 
+// ---------------------------------------------------------------------------
+// Classes & timetables
+// ---------------------------------------------------------------------------
+
+func (r *Repository) SearchClasses(keyword string) ([]domain.Class, error) {
+	query := `SELECT id, name, teacher_name, day_of_week, period, room, is_canceled
+	          FROM classes`
+	args := []any{}
+
+	if keyword != "" {
+		query += ` WHERE name LIKE ? OR teacher_name LIKE ?`
+		like := "%" + keyword + "%"
+		args = append(args, like, like)
+	}
+
+	query += ` ORDER BY day_of_week, period`
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("search classes: %w", err)
+	}
+	defer rows.Close()
+
+	classes := []domain.Class{}
+	for rows.Next() {
+		c, err := scanClass(rows)
+		if err != nil {
+			return nil, err
+		}
+		classes = append(classes, *c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate classes: %w", err)
+	}
+	return classes, nil
+}
+
+func (r *Repository) GetClassByID(id string) (*domain.Class, error) {
+	row := r.db.QueryRow(
+		`SELECT id, name, teacher_name, day_of_week, period, room, is_canceled
+		 FROM classes WHERE id = ?`, id,
+	)
+	c, err := scanClass(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// scanClass scans a class row from either *sql.Row or *sql.Rows.
+func scanClass(s interface{ Scan(...any) error }) (*domain.Class, error) {
+	var c domain.Class
+	var isCanceled int
+	if err := s.Scan(
+		&c.ID, &c.Name, &c.TeacherName,
+		&c.DayOfWeek, &c.Period, &c.Room, &isCanceled,
+	); err != nil {
+		return nil, err
+	}
+	c.IsCanceled = isCanceled == 1
+	return &c, nil
+}
+
+func (r *Repository) CreateTimetableEntry(e *domain.UserTimetable) error {
+	_, err := r.db.Exec(
+		`INSERT INTO user_timetables
+			(id, user_id, class_id, memo, count_present, count_absent, count_late)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		e.ID, e.UserID, e.ClassID, e.Memo,
+		e.CountPresent, e.CountAbsent, e.CountLate,
+	)
+	if err != nil {
+		return fmt.Errorf("create timetable entry: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) ListTimetable(userID string) ([]domain.TimetableEntry, error) {
+	rows, err := r.db.Query(
+		`SELECT t.id, c.id, c.name, c.teacher_name, c.day_of_week, c.period,
+		        c.room, c.is_canceled, t.memo, t.count_present, t.count_absent, t.count_late
+		 FROM user_timetables t
+		 JOIN classes c ON c.id = t.class_id
+		 WHERE t.user_id = ?
+		 ORDER BY c.day_of_week, c.period`, userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list timetable: %w", err)
+	}
+	defer rows.Close()
+
+	entries := []domain.TimetableEntry{}
+	for rows.Next() {
+		var e domain.TimetableEntry
+		var isCanceled int
+		if err := rows.Scan(
+			&e.ID, &e.ClassID, &e.Name, &e.TeacherName, &e.DayOfWeek, &e.Period,
+			&e.Room, &isCanceled, &e.Memo, &e.CountPresent, &e.CountAbsent, &e.CountLate,
+		); err != nil {
+			return nil, fmt.Errorf("scan timetable entry: %w", err)
+		}
+		e.IsCanceled = isCanceled == 1
+		entries = append(entries, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate timetable: %w", err)
+	}
+	return entries, nil
+}
+
+func (r *Repository) GetTimetableEntryByID(id string) (*domain.UserTimetable, error) {
+	row := r.db.QueryRow(
+		`SELECT id, user_id, class_id, memo, count_present, count_absent, count_late
+		 FROM user_timetables WHERE id = ?`, id,
+	)
+	var e domain.UserTimetable
+	err := row.Scan(
+		&e.ID, &e.UserID, &e.ClassID, &e.Memo,
+		&e.CountPresent, &e.CountAbsent, &e.CountLate,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scan timetable entry: %w", err)
+	}
+	return &e, nil
+}
+
+func (r *Repository) UpdateTimetableEntry(e *domain.UserTimetable) error {
+	_, err := r.db.Exec(
+		`UPDATE user_timetables
+		 SET memo = ?, count_present = ?, count_absent = ?, count_late = ?
+		 WHERE id = ?`,
+		e.Memo, e.CountPresent, e.CountAbsent, e.CountLate, e.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("update timetable entry: %w", err)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Friendships
+// ---------------------------------------------------------------------------
+
+func (r *Repository) CreateFriendship(f *domain.Friendship) error {
+	_, err := r.db.Exec(
+		`INSERT INTO friendships (id, requester_id, addressee_id, status)
+		 VALUES (?, ?, ?, ?)`,
+		f.ID, f.RequesterID, f.AddresseeID, f.Status,
+	)
+	if err != nil {
+		return fmt.Errorf("create friendship: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) GetFriendshipByID(id string) (*domain.Friendship, error) {
+	row := r.db.QueryRow(
+		`SELECT id, requester_id, addressee_id, status, created_at
+		 FROM friendships WHERE id = ?`, id,
+	)
+	return scanFriendship(row)
+}
+
+func (r *Repository) UpdateFriendshipStatus(id, status string) error {
+	_, err := r.db.Exec(
+		`UPDATE friendships SET status = ? WHERE id = ?`, status, id,
+	)
+	if err != nil {
+		return fmt.Errorf("update friendship status: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) ListFriendships(userID string) ([]domain.Friendship, error) {
+	rows, err := r.db.Query(
+		`SELECT id, requester_id, addressee_id, status, created_at
+		 FROM friendships
+		 WHERE requester_id = ? OR addressee_id = ?
+		 ORDER BY created_at DESC`, userID, userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list friendships: %w", err)
+	}
+	defer rows.Close()
+
+	friendships := []domain.Friendship{}
+	for rows.Next() {
+		var f domain.Friendship
+		if err := rows.Scan(
+			&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan friendship: %w", err)
+		}
+		friendships = append(friendships, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate friendships: %w", err)
+	}
+	return friendships, nil
+}
+
+func (r *Repository) GetApprovedFriendship(userA, userB string) (*domain.Friendship, error) {
+	row := r.db.QueryRow(
+		`SELECT id, requester_id, addressee_id, status, created_at
+		 FROM friendships
+		 WHERE status = 'approved'
+		   AND ((requester_id = ? AND addressee_id = ?)
+		     OR (requester_id = ? AND addressee_id = ?))`,
+		userA, userB, userB, userA,
+	)
+	return scanFriendship(row)
+}
+
+func scanFriendship(row *sql.Row) (*domain.Friendship, error) {
+	var f domain.Friendship
+	err := row.Scan(
+		&f.ID, &f.RequesterID, &f.AddresseeID, &f.Status, &f.CreatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scan friendship: %w", err)
+	}
+	return &f, nil
+}
+
 func boolToInt(v bool) int {
 	if v {
 		return 1

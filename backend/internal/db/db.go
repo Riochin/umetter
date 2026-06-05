@@ -12,6 +12,9 @@ import (
 //go:embed migrations/001_init.sql
 var initSQL string
 
+//go:embed migrations/003_seed_classes.sql
+var seedClassesSQL string
+
 func Open(cfg *config.Config) (*sql.DB, error) {
 	if cfg.DBDriver != "sqlite" {
 		return nil, fmt.Errorf("db.Open only handles sqlite; got %q", cfg.DBDriver)
@@ -34,6 +37,9 @@ func Open(cfg *config.Config) (*sql.DB, error) {
 
 func migrate(db *sql.DB) error {
 	if _, err := db.Exec(initSQL); err != nil {
+		return err
+	}
+	if _, err := db.Exec(seedClassesSQL); err != nil {
 		return err
 	}
 	return nil
