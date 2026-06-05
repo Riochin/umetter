@@ -14,4 +14,10 @@ type Repository interface {
 	ListPosts(category string) ([]domain.PublicPost, error)
 	GetPostByID(id string) (*domain.Post, error)
 	CreateReport(report *domain.Report) error
+
+	IsTeacherAllowedEmail(email string) (bool, error)
+	SaveEmailVerificationCode(email string, codeHash string, expiresAt string) error
+	GetEmailVerificationCodeHash(email string) (string, string, error)
+	MarkEmailVerified(email string) error
+	IsEmailVerified(email string) (bool, error)
 }

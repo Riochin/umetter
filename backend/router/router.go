@@ -17,6 +17,7 @@ func New(repo repository.Repository, cfg *config.Config) *gin.Engine {
 	auth := v1.Group("/auth")
 	auth.POST("/register", authH.Register)
 	auth.POST("/login", authH.Login)
+	auth.POST("/verify-email", authH.VerifyEmail)
 
 	meH := handler.NewMeHandler(repo)
 	postH := handler.NewPostHandler(repo)

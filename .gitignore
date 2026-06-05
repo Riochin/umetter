@@ -35,6 +35,10 @@ go.work.sum
 # Build output
 umetter
 
+# local private data
+backend/data/
+backend/*.csv
+
 # Editor/IDE
 # .idea/
 # .vscode/
