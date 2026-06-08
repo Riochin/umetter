@@ -27,10 +27,8 @@ struct MainTabView: View {
 
             // 2. カレンダー画面（時間割とオンデマンド）
             NavigationStack {
-                // TODO: CalendarView() に置き換える
-                Text("時間割・カレンダー画面をここに作ります")
-                    .navigationTitle("時間割")
-                    .navigationBarTitleDisplayMode(.inline)
+                // TODO: CalendarView() に置き換える➡︎多分いけた！
+                TimetableView()
             }
             .tabItem {
                 Label("カレンダー", systemImage: "calendar")
