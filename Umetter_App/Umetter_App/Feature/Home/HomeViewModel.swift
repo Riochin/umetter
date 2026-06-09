@@ -20,7 +20,7 @@ final class HomeViewModel: ObservableObject {
             PostModel(
                 id: UUID(),
                 userName: "名無しさん",
-                timeAgo: "10分前",
+                createdAt: Date(),
                 content: "今日の2限の〇〇先生の授業、休講になったらしい！サイトにも出てる。",
                 tags: ["#休講情報", "#学芸学部"],
                 imageUrl: nil,
@@ -52,28 +52,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     // 新しい投稿を追加する処理
-    func addPost(content: String, tags: [String]) {
-        // 空白や改行だけの投稿を防ぐ
-        let text = content.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // 本文が空なら投稿しない
-        guard !text.isEmpty else {
-            return
-        }
-
-        // 新しい投稿データを作る
-        let newPost = PostModel(
-            id: UUID(),
-            userName: "名無しさん",
-            timeAgo: "今",
-            content: text,
-            tags: tags,
-            imageUrl: nil,
-            likesCount: 0,
-            isLiked: false,
-            isSaved: false
-        )
-
+    func addPost(_ newPost: PostModel) {
         // ホーム画面の一番上に投稿を追加する
         posts.insert(newPost, at: 0)
     }
