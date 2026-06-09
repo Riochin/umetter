@@ -6,7 +6,7 @@ struct HomeView: View {
     @State private var showingNewPost = false
     @State private var now = Date()
 
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     
     var body: some View {
         NavigationStack {
@@ -37,7 +37,7 @@ struct HomeView: View {
                     // タイムライン
                     LazyVStack(spacing: 8) {
                         ForEach(viewModel.posts) { post in
-                            NewPostVeiw(
+                            NewPostView(
                                 post: post,
                                 viewModel: viewModel,
                                 now: now
@@ -97,3 +97,4 @@ struct HomeView: View {
         }
     }
 }
+

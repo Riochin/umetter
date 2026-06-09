@@ -15,19 +15,45 @@ class PostViewModel: ObservableObject {
     }
     
     var canSubmit: Bool {
-        return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !addedTags.isEmpty
+        return hasRealContent(content)
+    }
+
+    private func hasRealContent(_ text: String) -> Bool {
+        let normalized = text
+            .replacingOccurrences(of: "　", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // #給食 や #休講情報 みたいなハッシュタグ部分を消す
+        let textWithoutTags = normalized
+            .replacingOccurrences(of: "#\\S+", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // ハッシュタグを消した後に文字が残っていれば投稿OK
+        return !textWithoutTags.isEmpty
     }
     
     func addTag(_ tag: String) {
         let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
         
-        let formattedTag = trimmed.hasPrefix("#") ? trimmed : "#\(trimmed)"
+        // 先頭の # を全部取り除く
+        let tagBody = trimmed
+            .replacingOccurrences(of: "^#+", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if !addedTags.contains(formattedTag) {
-            addedTags.append(formattedTag)
+        // # だけ、空白だけなら追加しない
+        guard !tagBody.isEmpty else {
+            newTagText = ""
+            return
         }
         
+        let formattedTag = "#\(tagBody)"
+        
+        guard !addedTags.contains(formattedTag) else {
+            newTagText = ""
+            return
+        }
+        
+        addedTags.append(formattedTag)
         newTagText = ""
     }
     
@@ -36,13 +62,17 @@ class PostViewModel: ObservableObject {
     }
     
     func submitPost() -> PostModel? {
+        guard canSubmit else {
+            return nil
+        }
+        
         repository.saveTags(addedTags)
         loadSuggestedTags()
         
         let newPost = PostModel(
             id: UUID(),
             userName: "名無しさん",
-            createdAt:Date(),
+            createdAt: Date(),
             content: content,
             tags: addedTags,
             imageUrl: nil,
