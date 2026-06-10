@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-class TimetableController: ObservableObject {
+class TimetableModelView: ObservableObject {
     @Published var showWeekend = false
     @Published var showPeriod6 = false
 
@@ -33,7 +33,7 @@ class TimetableController: ObservableObject {
     // 👇 変更点：すべての学期のデータを保持する2階層の辞書に変更
     // Key: "2026年_1学期" -> Value: ["月-1": TimetableSlot]
     @Published var allTimetableData: [String: [String: TimetableSlot]] = [
-        "2026年_1学期": [
+        "2026年_1ターム": [
             "月-1": TimetableSlot(subject: "社会学概論", room: "1203", themeColor: .blue),
             "月-2": TimetableSlot(subject: "コンパイラ構成", room: "端末室", themeColor: .pink),
             "火-1": TimetableSlot(subject: "マーケティング論", room: "6101", themeColor: .orange),
@@ -44,7 +44,7 @@ class TimetableController: ObservableObject {
     ]
     
     @Published var allOndemandData: [String: [String: TimetableSlot]] = [
-        "2026年_1学期": [
+        "2026年_1ターム": [
             "水": TimetableSlot(subject: "情報倫理", room: "", themeColor: .blue)
         ]
     ]
