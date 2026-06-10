@@ -2,7 +2,7 @@ import SwiftUI
 
 struct TimetableView: View {
     // Controllerと連携
-    @StateObject private var controller = TimetableController()
+    @StateObject private var controller = TimetableModelView()
     
     var body: some View {
         // MainTabView側でNavigationStackが使われているため、ここはVStackから開始
