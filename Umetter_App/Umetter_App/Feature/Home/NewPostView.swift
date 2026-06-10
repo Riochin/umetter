@@ -1,8 +1,9 @@
 import SwiftUI
 
-struct NewPostVeiw: View {
+struct NewPostView: View {
     let post: PostModel
     @ObservedObject var viewModel: HomeViewModel
+    let now: Date
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,7 +13,7 @@ struct NewPostVeiw: View {
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
-                Text(post.timeAgo)
+                Text(post.timeAgo(from: now))
                     .font(.caption)
                     .foregroundColor(.gray)
                 Spacer()

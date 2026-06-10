@@ -1,14 +1,16 @@
 import SwiftUI
+import Combine
 
 struct HomeView: View {
-    // ViewModelを保持
     @StateObject private var viewModel = HomeViewModel()
     @State private var showingNewPost = false
+    @State private var now = Date()
+
+    private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
-                // 背景色
                 Color.umeBackground.ignoresSafeArea()
                 
                 ScrollView {
@@ -35,16 +37,20 @@ struct HomeView: View {
                     // タイムライン
                     LazyVStack(spacing: 8) {
                         ForEach(viewModel.posts) { post in
-                            NewPostVeiw(post: post, viewModel: viewModel)
+                            NewPostView(
+                                post: post,
+                                viewModel: viewModel,
+                                now: now
+                            )
                         }
                     }
                     .padding(.top, 8)
-                    // ボトムナビがある想定での余白
                     .padding(.bottom, 100)
                 }
                 
-                // フローティングアクションボタン (FAB)
-                Button(action: { showingNewPost = true }) {
+                Button(action: {
+                    showingNewPost = true
+                }) {
                     Image(systemName: "plus")
                         .font(.title2.weight(.bold))
                         .foregroundColor(.white)
@@ -54,7 +60,7 @@ struct HomeView: View {
                         .shadow(color: Color.umeRed.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
                 .padding(.trailing, 16)
-                .padding(.bottom, 24) // 実際のボトムナビの高さに合わせて調整
+                .padding(.bottom, 24)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -62,6 +68,7 @@ struct HomeView: View {
                     HStack(spacing: 6) {
                         UmeIcon(isLiked: true)
                             .frame(width: 18, height: 18)
+                        
                         Text("うめったー")
                             .font(.headline)
                             .fontWeight(.bold)
@@ -77,18 +84,17 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showingNewPost) {
-                // 投稿画面のモック（ボトムシート）
-                Text("ここに投稿画面を作ります")
-                    .presentationDetents([.fraction(0.9)])
+                PostView { newPost in
+                    viewModel.addPost(newPost)
+                    showingNewPost = false
+                }
+                .presentationDetents([.fraction(0.9)])
+                .presentationCornerRadius(40)
             }
         }
-    }
-}
-
-// プレビュー表示用
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
+        .onReceive(timer) { date in
+            now = date
+        }
     }
 }
 
