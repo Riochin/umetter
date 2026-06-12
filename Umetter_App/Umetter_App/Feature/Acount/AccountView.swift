@@ -1,9 +1,3 @@
-//
-//  AccountView.swift
-//  Umetter_App
-//
-//  Created by 渡邊藍 on 2026/06/05.
-//
 import SwiftUI
 
 // MARK: - Views (Main)
@@ -35,7 +29,7 @@ struct AccountView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 16) {
                         // プロフィールカード
-                        ProfileSection(
+                        ProfileSectionView(
                             friendsCount: viewModel.friendsCount,
                             postsCount: viewModel.postsCount,
                             onFriendsTapped: { viewModel.switchTab(to: 3) }
@@ -43,46 +37,61 @@ struct AccountView: View {
                         
                         // コンテンツ切り替えタブ
                         HStack(spacing: 0) {
-                            TabButton(title: "投稿", isSelected: viewModel.selectedTab == 0) { viewModel.switchTab(to: 0) }
-                            TabButton(title: "いいね", isSelected: viewModel.selectedTab == 1) { viewModel.switchTab(to: 1) }
-                            TabButton(title: "保存", isSelected: viewModel.selectedTab == 2) { viewModel.switchTab(to: 2) }
-                            TabButton(title: "友達", isSelected: viewModel.selectedTab == 3) { viewModel.switchTab(to: 3) }
+                            TabButtonView(title: "投稿", isSelected: viewModel.selectedTab == 0) { viewModel.switchTab(to: 0) }
+                            TabButtonView(title: "いいね", isSelected: viewModel.selectedTab == 1) { viewModel.switchTab(to: 1) }
+                            TabButtonView(title: "保存", isSelected: viewModel.selectedTab == 2) { viewModel.switchTab(to: 2) }
+                            TabButtonView(title: "友達", isSelected: viewModel.selectedTab == 3) { viewModel.switchTab(to: 3) }
                         }
                         .padding(.bottom, 4)
                         
                         // タブコンテンツ
                         VStack(spacing: 12) {
                             if viewModel.selectedTab == 0 {
-                                ForEach($viewModel.myPosts) { $post in
-                                    PostCard(post: $post)
+                                if viewModel.myPosts.isEmpty {
+                                    Text("投稿はありません")
+                                        .font(.footnote)
+                                        .foregroundColor(.textLight)
+                                        .padding(.top, 32)
+                                } else {
+                                    ForEach($viewModel.myPosts) { $post in
+                                        PostCardView(post: $post)
+                                    }
                                 }
                             } else if viewModel.selectedTab == 1 {
                                 ForEach($viewModel.likedPosts) { $post in
-                                    PostCard(post: $post)
+                                    PostCardView(post: $post)
                                 }
                             } else if viewModel.selectedTab == 2 {
                                 ForEach($viewModel.savedPosts) { $post in
-                                    PostCard(post: $post)
+                                    PostCardView(post: $post)
                                 }
                             } else if viewModel.selectedTab == 3 {
-                                VStack(spacing: 8) {
-                                    ForEach($viewModel.friends) { $friend in
-                                        FriendRow(friend: $friend) {
-                                            viewModel.toggleFriendStatus(for: friend.id)
+                                // 💡 修正: 友達が空のときの表示を追加しました
+                                if viewModel.friends.isEmpty {
+                                    Text("友達はいません")
+                                        .font(.footnote)
+                                        .foregroundColor(.textLight)
+                                        .padding(.top, 32)
+                                } else {
+                                    VStack(spacing: 8) {
+                                        ForEach($viewModel.friends) { $friend in
+                                            FriendRowView(friend: $friend) {
+                                                viewModel.toggleFriendStatus(for: friend.id)
+                                            }
                                         }
                                     }
+                                    .padding(.horizontal, 4)
                                 }
-                                .padding(.horizontal, 4)
                             }
                         }
                         .padding(.horizontal, 12)
                     }
-                    .padding(.bottom, 100) // ボトムナビゲーション＆トースト用余白
+                    .padding(.bottom, 100)
                 }
                 .background(Color.umeBg)
             }
             
-            // トースト通知（ZStackの前面に配置）
+            // トースト通知
             if viewModel.showToast {
                 VStack {
                     Spacer()
@@ -94,20 +103,14 @@ struct AccountView: View {
                         .background(Color(hex: "1F2937").opacity(0.9))
                         .cornerRadius(20)
                         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 4)
-                        .padding(.bottom, 100) // ボトムナビゲーションの上に表示
+                        .padding(.bottom, 100)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 .zIndex(100)
             }
         }
-        /*.overlay(
-            BottomNavigationBar(selectedIndex: 4),
-            alignment: .bottom
-        )*/
-         
     }
 }
-
 
 struct AccountView_Previews: PreviewProvider {
     static var previews: some View {
