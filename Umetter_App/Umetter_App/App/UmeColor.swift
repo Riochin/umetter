@@ -1,16 +1,13 @@
-//
-//  .swift
-//  Umetter_App
-//
-//  Created by 渡邊藍 on 2026/06/05.
-//
 import SwiftUI
 
-// MARK: - Custom Colors
+// MARK: - App Theme Colors
 extension Color {
-    static let umePrimary = Color(hex: "8B1E38")
+    // Brand Colors
+    static let umeRed = Color(hex: "8B1E38")
+    static let umeBackground = Color(hex: "F8F4F0")
+    
+    // UI Colors
     static let umePrimaryHover = Color(hex: "6C152A")
-    static let umeBg = Color(hex: "F8F4F0")
     static let textDark = Color(hex: "1F2937")
     static let textGray = Color(hex: "4B5563")
     static let textLight = Color(hex: "9CA3AF")
@@ -18,6 +15,7 @@ extension Color {
     static let cardBg = Color.white
 }
 
+// MARK: - Hex Initializer
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

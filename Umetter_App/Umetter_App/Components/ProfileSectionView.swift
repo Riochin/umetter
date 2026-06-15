@@ -57,12 +57,12 @@ struct ProfileSectionView: View {
                 Text("プロフィールを編集")
                     .font(.subheadline)
                     .fontWeight(.bold)
-                    .foregroundColor(.umePrimary)
+                    .foregroundColor(.umeRed)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(Color.white)
                     .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.umePrimary, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.umeRed, lineWidth: 1))
             }
         }
         .padding(20)

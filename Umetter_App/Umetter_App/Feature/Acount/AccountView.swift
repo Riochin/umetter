@@ -12,7 +12,7 @@ struct AccountView: View {
                     Text("マイページ")
                         .font(.headline)
                         .fontWeight(.bold)
-                        .foregroundColor(.umePrimary)
+                        .foregroundColor(.umeRed)
                     Spacer()
                     Button(action: {}) {
                         Image(systemName: "gearshape")
@@ -23,7 +23,7 @@ struct AccountView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
-                .background(Color.umeBg)
+                .background(Color.umeBackground)
                 
                 // メインコンテンツ
                 ScrollView(showsIndicators: false) {
@@ -88,7 +88,7 @@ struct AccountView: View {
                     }
                     .padding(.bottom, 100)
                 }
-                .background(Color.umeBg)
+                .background(Color.umeBackground)
             }
             
             // トースト通知

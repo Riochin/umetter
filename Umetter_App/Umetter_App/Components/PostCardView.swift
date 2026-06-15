@@ -16,7 +16,7 @@ struct PostCardView: View {
             
             HStack(spacing: 8) {
                 ForEach(post.tags, id: \.self) { tag in
-                    Text(tag).font(.caption).fontWeight(.bold).foregroundColor(.umePrimary)
+                    Text(tag).font(.caption).fontWeight(.bold).foregroundColor(.umeRed)
                 }
             }
             
@@ -30,15 +30,15 @@ struct PostCardView: View {
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: post.isLiked ? "heart.fill" : "heart")
-                            .font(.system(size: 18)).foregroundColor(post.isLiked ? .umePrimary : .textLight)
+                            .font(.system(size: 18)).foregroundColor(post.isLiked ? .umeRed : .textLight)
                         Text("\(post.likes)")
-                            .font(.caption).fontWeight(.bold).foregroundColor(post.isLiked ? .umePrimary : .textLight)
+                            .font(.caption).fontWeight(.bold).foregroundColor(post.isLiked ? .umeRed : .textLight)
                     }
                 }
                 Spacer()
                 Button(action: { post.isSaved.toggle() }) {
                     Image(systemName: post.isSaved ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 18)).foregroundColor(post.isSaved ? .umePrimary : .textLight)
+                        .font(.system(size: 18)).foregroundColor(post.isSaved ? .umeRed : .textLight)
                 }
                 Spacer()
                 Image(systemName: "square.and.arrow.up")

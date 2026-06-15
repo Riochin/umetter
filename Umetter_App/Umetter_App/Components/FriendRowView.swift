@@ -28,9 +28,9 @@ struct FriendRowView: View {
                     .foregroundColor(friend.isFriend ? .textGray : .white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
-                    .background(friend.isFriend ? Color.clear : Color.umePrimary)
+                    .background(friend.isFriend ? Color.clear : Color.umeRed)
                     .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(friend.isFriend ? Color.borderColor : Color.umePrimary, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(friend.isFriend ? Color.borderColor : Color.umeRed, lineWidth: 1))
             }
             */
         }
