@@ -48,9 +48,7 @@ struct MainTabView: View {
             // 4. マイページ画面（プロフィール設定やブックマーク確認）
             NavigationStack {
                 // TODO: AccountView() に置き換える
-                Text("マイページ画面をここに作ります")
-                    .navigationTitle("マイページ")
-                    .navigationBarTitleDisplayMode(.inline)
+                AccountView()
             }
             .tabItem {
                 Label("アカウント", systemImage: "person.fill")
