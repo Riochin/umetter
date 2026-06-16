@@ -1,11 +1,5 @@
 import SwiftUI
 
-// アプリ全体で使うカラーの定義
-extension Color {
-    static let umeRed = Color(red: 139/255, green: 30/255, blue: 56/255)
-    static let umeBackground = Color(red: 248/255, green: 244/255, blue: 240/255)
-}
-
 // 梅の花びらの形
 struct UmeShape: Shape {
     func path(in rect: CGRect) -> Path {
