@@ -3,10 +3,12 @@ import Combine
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
-    @State private var showingNewPost = false
-    @State private var now = Date()
+        @StateObject private var notificationViewModel = NotionViewModel()
+        
+        @State private var showingNewPost = false
+        @State private var now = Date()
 
-    private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
+        private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     
     var body: some View {
         NavigationStack {
@@ -77,12 +79,13 @@ struct HomeView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
+                    NavigationLink {
+                        NotionView(viewModel: notificationViewModel)
+                    } label: {
                         Image(systemName: "bell")
                             .foregroundColor(.gray)
                     }
-                }
-            }
+                }            }
             .sheet(isPresented: $showingNewPost) {
                 PostView { newPost in
                     viewModel.addPost(newPost)
