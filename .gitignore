@@ -43,3 +43,13 @@ backend/*.csv
 # .idea/
 # .vscode/
 .DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.noindex
+xcuserdata/
+*.xcuserstate
+*.xcbkptlist
