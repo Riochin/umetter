@@ -32,22 +32,9 @@ class TimetableModelView: ObservableObject {
     
     // 👇 変更点：すべての学期のデータを保持する2階層の辞書に変更
     // Key: "2026年_1学期" -> Value: ["月-1": TimetableSlot]
-    @Published var allTimetableData: [String: [String: TimetableSlot]] = [
-        "2026年_1ターム": [
-            "月-1": TimetableSlot(subject: "社会学概論", room: "1203", themeColor: .blue),
-            "月-2": TimetableSlot(subject: "コンパイラ構成", room: "端末室", themeColor: .pink),
-            "火-1": TimetableSlot(subject: "マーケティング論", room: "6101", themeColor: .orange),
-            "木-2": TimetableSlot(subject: "地球の科学", room: "1102", themeColor: .blue),
-            "木-3": TimetableSlot(subject: "英語リスニング", room: "オンライン", themeColor: .green),
-            "金-4": TimetableSlot(subject: "心理学", room: "6B13", themeColor: .purple)
-        ]
-    ]
+    @Published var allTimetableData: [String: [String: TimetableSlot]] = [:]
     
-    @Published var allOndemandData: [String: [String: TimetableSlot]] = [
-        "2026年_1ターム": [
-            "水": TimetableSlot(subject: "情報倫理", room: "", themeColor: .blue)
-        ]
-    ]
+    @Published var allOndemandData: [String: [String: TimetableSlot]] = [:]
     
     // 👇 追加：現在の「年_ターム」のキーを作成する計算プロパティ
     var currentTermKey: String {
@@ -115,5 +102,6 @@ class TimetableModelView: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.activeAlert = "【重要】休講情報: 12/24(金) の英語リスニングは休講です"
         }
+        //バックエンドと繋げたい
     }
 }
