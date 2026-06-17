@@ -7,18 +7,16 @@ PRAGMA foreign_keys = ON;
 -- ------------------------------------------------------------
 -- users
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users (
-    id                   TEXT NOT NULL PRIMARY KEY,
-    email                TEXT NOT NULL UNIQUE,
-    password_hash        TEXT NOT NULL,
-    department           TEXT NOT NULL,
-    admission_year       INTEGER NOT NULL,
-    display_name         TEXT NOT NULL DEFAULT '',
-    role                 TEXT NOT NULL DEFAULT 'student'
-                             CHECK(role IN ('student','faculty','admin')),
-    timetable_visibility TEXT NOT NULL DEFAULT 'friends'
-                             CHECK(timetable_visibility IN ('private','friends','juniors','all')),
-    created_at           TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+CREATE TABLE IF NOT EXISTS classes (
+    id           TEXT    NOT NULL PRIMARY KEY,
+    course_code  TEXT    NOT NULL DEFAULT '',
+    term         TEXT    NOT NULL DEFAULT '',
+    name         TEXT    NOT NULL,
+    teacher_name TEXT    NOT NULL DEFAULT '',
+    day_of_week  INTEGER NOT NULL CHECK(day_of_week BETWEEN 1 AND 6),
+    period       INTEGER NOT NULL CHECK(period BETWEEN 1 AND 6),
+    room         TEXT    NOT NULL DEFAULT '',
+    is_canceled  INTEGER NOT NULL DEFAULT 0 CHECK(is_canceled IN (0,1))
 );
 
 -- ------------------------------------------------------------

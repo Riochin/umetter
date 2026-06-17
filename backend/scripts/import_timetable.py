@@ -31,17 +31,13 @@ def clean_text(value) -> str:
     if value is None:
         return ""
 
-    # 5206.0 みたいな教室番号を 5206 にする
     if isinstance(value, float) and value.is_integer():
         return str(int(value))
 
     text = str(value).replace("\n", " ").strip()
     text = re.sub(r"\s+", " ", text)
-
-    # 授業名の先頭にある ★ はアプリ表示上は邪魔なので消す
     text = text.removeprefix("★").strip()
 
-    # openpyxlが 5206.0 を文字列として返した場合も整える
     if re.fullmatch(r"\d+\.0", text):
         return text[:-2]
 
@@ -58,11 +54,10 @@ def to_period(value) -> int | None:
         return None
 
 
-def make_class_id(code: str, day_of_week: int, period: int) -> str:
-    # classes.id は TEXT なので、時間割コード + 曜日 + 時限で安定IDを作る
-    # T2は同じ授業が日付ごとに複数行あるため、日付はIDに含めない
-    safe_code = re.sub(r"[^A-Za-z0-9_-]", "_", code)
-    return f"tt_{safe_code}_{day_of_week}_{period}"
+def make_class_id(course_code: str, term: str, day_of_week: int, period: int) -> str:
+    safe_code = re.sub(r"[^A-Za-z0-9_-]", "_", course_code)
+    safe_term = re.sub(r"[^A-Za-z0-9_-]", "_", term)
+    return f"tt_{safe_code}_{safe_term}_{day_of_week}_{period}"
 
 
 def download_xlsx() -> None:
@@ -82,18 +77,21 @@ def parse_t134(ws):
     T134:
     6行目: ヘッダー
     A:曜日 B:時限 C:時間割コード D:授業名 E:開講期 F:担当期 G:教員名 H:教室名称
+
+    T134シートにはT1/T3/T4が含まれるため、担当期をtermとして保存する。
     """
     rows = []
 
     for row in ws.iter_rows(min_row=7, values_only=True):
         day = clean_text(row[0])
         period = to_period(row[1])
-        code = clean_text(row[2])
+        course_code = clean_text(row[2])
         name = clean_text(row[3])
+        term = clean_text(row[5])
         teacher_name = clean_text(row[6])
         room = clean_text(row[7])
 
-        if not day or period is None or not code or not name:
+        if not day or period is None or not course_code or not name or not term:
             continue
 
         day_of_week = DAY_MAP.get(day)
@@ -101,7 +99,9 @@ def parse_t134(ws):
             continue
 
         rows.append({
-            "id": make_class_id(code, day_of_week, period),
+            "id": make_class_id(course_code, term, day_of_week, period),
+            "course_code": course_code,
+            "term": term,
             "name": name,
             "teacher_name": teacher_name,
             "day_of_week": day_of_week,
@@ -117,18 +117,21 @@ def parse_t2(ws):
     T2:
     7行目: ヘッダー
     A:時間割コード B:授業名 C:教員氏名 D:教室名称 E:曜日 F:時限 G:授業年月日
+
+    T2シートは第2ターム用なので、termはT2固定にする。
     """
     rows = []
 
     for row in ws.iter_rows(min_row=9, values_only=True):
-        code = clean_text(row[0])
+        course_code = clean_text(row[0])
         name = clean_text(row[1])
         teacher_name = clean_text(row[2])
         room = clean_text(row[3])
         day = clean_text(row[4])
         period = to_period(row[5])
+        term = "T2"
 
-        if not day or period is None or not code or not name:
+        if not day or period is None or not course_code or not name:
             continue
 
         day_of_week = DAY_MAP.get(day)
@@ -136,7 +139,9 @@ def parse_t2(ws):
             continue
 
         rows.append({
-            "id": make_class_id(code, day_of_week, period),
+            "id": make_class_id(course_code, term, day_of_week, period),
+            "course_code": course_code,
+            "term": term,
             "name": name,
             "teacher_name": teacher_name,
             "day_of_week": day_of_week,
@@ -148,10 +153,6 @@ def parse_t2(ws):
 
 
 def dedupe_classes(classes):
-    """
-    同じ id の授業は1件にまとめる。
-    T134のT1/T3/T4重複や、T2の日付ごとの重複をここで消す。
-    """
     unique = {}
 
     for cls in classes:
@@ -161,15 +162,34 @@ def dedupe_classes(classes):
     return list(unique.values())
 
 
+def ensure_columns(conn):
+    """
+    既存のローカルDB向けに、course_code / term カラムがなければ追加する。
+    """
+    columns = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(classes)").fetchall()
+    }
+
+    if "course_code" not in columns:
+        conn.execute("ALTER TABLE classes ADD COLUMN course_code TEXT NOT NULL DEFAULT ''")
+
+    if "term" not in columns:
+        conn.execute("ALTER TABLE classes ADD COLUMN term TEXT NOT NULL DEFAULT ''")
+
+
 def import_classes(classes):
     conn = sqlite3.connect(DB_PATH)
 
     try:
         conn.execute("PRAGMA foreign_keys = ON")
+        ensure_columns(conn)
 
         sql = """
         INSERT INTO classes (
             id,
+            course_code,
+            term,
             name,
             teacher_name,
             day_of_week,
@@ -177,8 +197,10 @@ def import_classes(classes):
             room,
             is_canceled
         )
-        VALUES (?, ?, ?, ?, ?, ?, 0)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
         ON CONFLICT(id) DO UPDATE SET
+            course_code = excluded.course_code,
+            term = excluded.term,
             name = excluded.name,
             teacher_name = excluded.teacher_name,
             day_of_week = excluded.day_of_week,
@@ -191,6 +213,8 @@ def import_classes(classes):
             [
                 (
                     cls["id"],
+                    cls["course_code"],
+                    cls["term"],
                     cls["name"],
                     cls["teacher_name"],
                     cls["day_of_week"],
