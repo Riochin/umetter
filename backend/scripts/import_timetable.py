@@ -54,6 +54,50 @@ def to_period(value) -> int | None:
         return None
 
 
+def expand_terms(term_text: str) -> list[str]:
+    """
+    担当期の表記を T1/T2/T3/T4 単位に展開する。
+
+    対応例:
+    - T1      -> ["T1"]
+    - T13     -> ["T1", "T3"]
+    - T1234   -> ["T1", "T2", "T3", "T4"]
+    - T1/T3   -> ["T1", "T3"]
+    - T1・3   -> ["T1", "T3"]
+    - T1-4    -> ["T1", "T2", "T3", "T4"]
+    """
+    text = clean_text(term_text).upper()
+
+    if not text:
+        return []
+
+    terms = set()
+
+    # T1-4 / T1~T4 / 1-4 のような範囲表記に対応
+    for start, end in re.findall(r"T?\s*([1-4])\s*[-~〜]\s*T?\s*([1-4])", text):
+        start_num = int(start)
+        end_num = int(end)
+
+        low = min(start_num, end_num)
+        high = max(start_num, end_num)
+
+        for num in range(low, high + 1):
+            terms.add(f"T{num}")
+
+    # T13 / T1234 / T1/T3 / T1・3 / T1,T3 などに対応
+    for group in re.findall(r"T\s*((?:[1-4]\s*(?:[/,，、・･+&]\s*)?)+)", text):
+        for digit in re.findall(r"[1-4]", group):
+            terms.add(f"T{digit}")
+
+    # 念のため、Tなしで 13 / 1234 のように書かれている場合にも対応
+    compact_text = re.sub(r"[\s/,，、・･+&]+", "", text)
+    if not terms and re.fullmatch(r"[1-4]+", compact_text):
+        for digit in compact_text:
+            terms.add(f"T{digit}")
+
+    return sorted(terms, key=lambda term: int(term[1]))
+
+
 def make_class_id(course_code: str, term: str, day_of_week: int, period: int) -> str:
     safe_code = re.sub(r"[^A-Za-z0-9_-]", "_", course_code)
     safe_term = re.sub(r"[^A-Za-z0-9_-]", "_", term)
@@ -78,7 +122,8 @@ def parse_t134(ws):
     6行目: ヘッダー
     A:曜日 B:時限 C:時間割コード D:授業名 E:開講期 F:担当期 G:教員名 H:教室名称
 
-    T134シートにはT1/T3/T4が含まれるため、担当期をtermとして保存する。
+    T134シートには T1/T3/T4 のほか、T13/T1234 のような複合ターム表記もあり得るため、
+    担当期を T1/T2/T3/T4 単位に展開して保存する。
     """
     rows = []
 
@@ -87,27 +132,29 @@ def parse_t134(ws):
         period = to_period(row[1])
         course_code = clean_text(row[2])
         name = clean_text(row[3])
-        term = clean_text(row[5])
+        term_text = clean_text(row[5])
+        terms = expand_terms(term_text)
         teacher_name = clean_text(row[6])
         room = clean_text(row[7])
 
-        if not day or period is None or not course_code or not name or not term:
+        if not day or period is None or not course_code or not name or not terms:
             continue
 
         day_of_week = DAY_MAP.get(day)
         if day_of_week is None:
             continue
 
-        rows.append({
-            "id": make_class_id(course_code, term, day_of_week, period),
-            "course_code": course_code,
-            "term": term,
-            "name": name,
-            "teacher_name": teacher_name,
-            "day_of_week": day_of_week,
-            "period": period,
-            "room": room,
-        })
+        for term in terms:
+            rows.append({
+                "id": make_class_id(course_code, term, day_of_week, period),
+                "course_code": course_code,
+                "term": term,
+                "name": name,
+                "teacher_name": teacher_name,
+                "day_of_week": day_of_week,
+                "period": period,
+                "room": room,
+            })
 
     return rows
 
@@ -163,9 +210,6 @@ def dedupe_classes(classes):
 
 
 def ensure_columns(conn):
-    """
-    既存のローカルDB向けに、course_code / term カラムがなければ追加する。
-    """
     columns = {
         row[1]
         for row in conn.execute("PRAGMA table_info(classes)").fetchall()
