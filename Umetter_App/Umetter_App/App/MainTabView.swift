@@ -43,10 +43,11 @@ struct MainTabView: View {
 
             // 2. 通知画面（アラーム機能や通知一覧）
             NavigationStack {
-                            // TODO: SearchView() に置き換える
-                            Text("検索画面をここに作ります")
-                                .navigationTitle("検索")
-                                .navigationBarTitleDisplayMode(.inline)
+                            // TODO: SearchView()に置き換える
+                            //Text("検索画面をここに作ります")
+                                //.navigationTitle("検索")
+                                //.navigationBarTitleDisplayMode(.inline)
+                            SearchView()
                         }
                         .tabItem {
                             Label("検索", systemImage: "magnifyingglass")
