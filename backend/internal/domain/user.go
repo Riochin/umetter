@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-var emailRe = regexp.MustCompile(`^([a-z]+)(\d{2})\d+@gm\.tsuda\.ac\.jp$`)
+var emailRe = regexp.MustCompile(`^([a-z]+)(\d{2})\d+[a-z]*@gm\.tsuda\.ac\.jp$`)
 
 // Timetable visibility tiers.
 const (
