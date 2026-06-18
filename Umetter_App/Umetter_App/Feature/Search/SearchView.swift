@@ -251,7 +251,7 @@ struct TabButton: View {
 
 // ★ ホーム画面の投稿デザインに合わせた角丸カード
 struct PostRow: View {
-    let post: Post
+    let post: PostModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -266,7 +266,8 @@ struct PostRow: View {
                     Text(post.userName)
                         .font(.subheadline)
                         .fontWeight(.bold)
-                    Text(post.timeAgo)
+                    // 👇 修正ポイント：現在時刻(Date())を渡して計算してもらう
+                    Text(post.timeAgo(from: Date()))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -289,16 +290,20 @@ struct PostRow: View {
                 }
             }
             
-            // アクションボタン（ホーム画面のスクリーンショットに寄せています）
+            // アクションボタン
             HStack(spacing: 32) {
                 Image(systemName: "bubble.right")
                 
                 HStack(spacing: 4) {
-                    Image(systemName: "rosette") // お花の代わり
-                    Text("\(post.likes)")
+                    Image(systemName: "rosette")
+                    // 👇 修正ポイント：likes を likesCount に変更
+                    Text("\(post.likesCount)")
                 }
                 
-                Image(systemName: "bookmark")
+                // 👇 チームのモデルに isSaved などがあるので、将来的に色を変えたりできます（今回は見た目のみ）
+                Image(systemName: post.isSaved ? "bookmark.fill" : "bookmark")
+                    .foregroundColor(post.isSaved ? .primaryRed : .gray)
+                
                 Image(systemName: "square.and.arrow.up")
             }
             .font(.subheadline)
@@ -306,10 +311,8 @@ struct PostRow: View {
             .padding(.top, 4)
         }
         .padding()
-        // カード自体の背景を白にし、角を丸くする
         .background(Color.white)
         .cornerRadius(20)
-        // 画面の両端から少し内側に配置する
         .padding(.horizontal)
     }
 }
