@@ -10,7 +10,11 @@ final class APIClient {
         d.keyDecodingStrategy = .convertFromSnakeCase
         return d
     }()
-    private let encoder = JSONEncoder()
+    private let encoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.keyEncodingStrategy = .convertToSnakeCase
+        return e
+    }()
 
     private init() {}
 
