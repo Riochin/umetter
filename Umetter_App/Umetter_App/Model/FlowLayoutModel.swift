@@ -44,7 +44,7 @@ struct FlowLayoutModel: Layout {
         subviews: Subviews
     ) -> (rows: [Row], size: CGSize) {
         
-        let maxWidth = proposal.width ?? UIScreen.main.bounds.width
+        let maxWidth = proposal.width ?? .infinity
         
         var rows: [Row] = []
         var currentRow = Row()

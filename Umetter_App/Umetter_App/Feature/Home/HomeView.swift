@@ -87,8 +87,7 @@ struct HomeView: View {
                     }
                 }            }
             .sheet(isPresented: $showingNewPost) {
-                PostView { newPost in
-                    viewModel.addPost(newPost)
+                PostView {
                     showingNewPost = false
                 }
                 .presentationDetents([.fraction(0.9)])
@@ -97,6 +96,9 @@ struct HomeView: View {
         }
         .onReceive(timer) { date in
             now = date
+        }
+        .task {
+            await viewModel.loadPosts()
         }
     }
 }

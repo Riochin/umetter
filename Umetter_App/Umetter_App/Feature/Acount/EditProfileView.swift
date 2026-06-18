@@ -9,6 +9,14 @@ struct EditProfileView: View {
     @State private var draftYear: String = ""
     @State private var draftBio: String = ""
     @State private var draftIconColor: Color = Color.borderColor
+    @State private var draftVisibility: String = "private"
+
+    let visibilityOptions: [(String, String)] = [
+        ("private",  "非公開"),
+        ("friends",  "友達のみ"),
+        ("juniors",  "後輩まで"),
+        ("all",      "全員に公開"),
+    ]
     
     let availableColors: [Color] = [
         Color.borderColor, Color(hex: "FCA5A5"), Color(hex: "93C5FD"), Color(hex: "D8B4FE"), Color(hex: "FCD34D")
@@ -95,6 +103,15 @@ struct EditProfileView: View {
                     }
                 }
  
+                Section(header: Text("時間割の公開設定")) {
+                    Picker("公開範囲", selection: $draftVisibility) {
+                        ForEach(visibilityOptions, id: \.0) { value, label in
+                            Text(label).tag(value)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
                 Section(header: Text("自己紹介")) {
                     ZStack(alignment: .topLeading) {
                         if draftBio.isEmpty {
@@ -126,6 +143,7 @@ struct EditProfileView: View {
                             bio: draftBio,
                             iconColor: draftIconColor
                         )
+                        viewModel.saveVisibility(draftVisibility)
                         dismiss()
                     }
                     .fontWeight(.bold)
@@ -138,6 +156,7 @@ struct EditProfileView: View {
                 draftYear = viewModel.userProfile.enrollmentYear
                 draftBio = viewModel.userProfile.bio
                 draftIconColor = viewModel.userProfile.iconColor
+                draftVisibility = viewModel.userProfile.timetableVisibility
             }
         }
     }

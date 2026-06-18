@@ -22,9 +22,11 @@ struct TimetableView: View {
         .navigationBarTitleDisplayMode(.inline)
         // 👇 画面が表示された瞬間に通知データを取得する
         .onAppear {
-                    controller.fetchActiveAlert()
-                }
-        // モーダル類の定義
+            controller.fetchActiveAlert()
+        }
+        .task {
+            await controller.loadTimetable()
+        }
         .sheet(isPresented: $controller.showingPicker) {
             pickerSheet.presentationDetents([.height(250)])
         }
@@ -33,6 +35,9 @@ struct TimetableView: View {
         }
         .sheet(isPresented: $controller.showingEditSheet) {
             editSlotSheet.presentationDetents([.fraction(0.6)])
+        }
+        .sheet(isPresented: $controller.showingClassSearch) {
+            ClassSearchView(termKey: controller.currentTermKey)
         }
     }
     
@@ -187,6 +192,20 @@ struct TimetableView: View {
                     .pickerStyle(.navigationLink)
                 }
                 
+                Section {
+                    Button(action: {
+                        controller.showingEditSheet = false
+                        controller.showingClassSearch = true
+                    }) {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                            Text("科目を検索して追加")
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .foregroundColor(.umeRed)
+                    }
+                }
+
                 Section {
                     Button(action: { controller.saveSlot() }) {
                         Text("保存する")
