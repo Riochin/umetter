@@ -2,7 +2,7 @@ import Foundation
 
 struct PostModel: Identifiable {
     let id: String
-    let authorId: String
+    let authorId: String?
     let createdAt: String
     let body: String
     let category: String
@@ -32,11 +32,11 @@ struct PostModel: Identifiable {
 
     init(from dto: PostResponse) {
         self.id = dto.id
-        self.authorId = dto.authorId
+        self.authorId = dto.authorId ?? ""
         self.createdAt = dto.createdAt
         self.body = dto.body
         self.category = dto.category
-        self.attachmentUrl = dto.attachmentUrl
+        self.attachmentUrl = dto.attachmentUrl.flatMap { $0.isEmpty ? nil : $0 }
         self.isPinned = dto.isPinned
         self.likesCount = 0
         self.isLiked = false

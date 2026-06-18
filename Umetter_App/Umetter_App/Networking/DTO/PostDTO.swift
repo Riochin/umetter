@@ -2,7 +2,7 @@ import Foundation
 
 struct PostResponse: Decodable {
     let id: String
-    let authorId: String
+    let authorId: String?
     let postType: Int
     let category: String
     let body: String
