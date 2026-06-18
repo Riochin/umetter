@@ -4,12 +4,11 @@ struct NewPostView: View {
     let post: PostModel
     @ObservedObject var viewModel: HomeViewModel
     let now: Date
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // ヘッダー（名前・時間・メニュー）
             HStack {
-                Text(post.userName)
+                Text("匿名")
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -22,13 +21,11 @@ struct NewPostView: View {
                         .foregroundColor(.gray)
                 }
             }
-            
-            // 本文
-            Text(post.content)
+
+            Text(post.body)
                 .font(.subheadline)
                 .foregroundColor(.primary)
-            
-            // タグ
+
             if !post.tags.isEmpty {
                 HStack {
                     ForEach(post.tags, id: \.self) { tag in
@@ -39,27 +36,20 @@ struct NewPostView: View {
                     }
                 }
             }
-            
-            // 画像プレビュー (仮)
-            if post.imageUrl != nil {
+
+            if post.attachmentUrl != nil {
                 Rectangle()
                     .fill(Color.gray.opacity(0.2))
                     .frame(height: 160)
                     .cornerRadius(10)
-                    .overlay(
-                        Text("画像プレビュー").foregroundColor(.gray)
-                    )
+                    .overlay(Text("画像プレビュー").foregroundColor(.gray))
             }
-            
-            // アクションボタン
+
             HStack {
                 Button(action: {}) { Image(systemName: "message").foregroundColor(.gray) }
                 Spacer()
-                
-                // 梅いいねボタン
-                Button(action: {
-                    viewModel.toggleLike(for: post)
-                }) {
+
+                Button(action: { viewModel.toggleLike(for: post) }) {
                     HStack(spacing: 4) {
                         UmeIcon(isLiked: post.isLiked)
                         if post.likesCount > 0 {
@@ -70,17 +60,14 @@ struct NewPostView: View {
                         }
                     }
                 }
-                
+
                 Spacer()
-                
-                // ブックマークボタン
-                Button(action: {
-                    viewModel.toggleSave(for: post)
-                }) {
+
+                Button(action: { viewModel.toggleSave(for: post) }) {
                     Image(systemName: post.isSaved ? "bookmark.fill" : "bookmark")
                         .foregroundColor(post.isSaved ? .umeRed : .gray)
                 }
-                
+
                 Spacer()
                 Button(action: {}) { Image(systemName: "square.and.arrow.up").foregroundColor(.gray) }
             }

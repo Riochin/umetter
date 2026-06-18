@@ -7,69 +7,63 @@ class AccountViewModel: ObservableObject {
     @Published var showToast = false
     @Published var toastMessage = ""
     private var toastTask: Task<Void, Never>? = nil
-    
+
     @Published var userProfile: UserProfile = UserStore.shared.profile
     @Published var showingEditProfile = false
     @Published var friends: [Friend] = []
-    
-    // PostStoreとUserStoreを監視するための仕組み
+
     private var cancellables = Set<AnyCancellable>()
-    
     @Published var allPosts: [PostModel] = []
 
     init() {
-        // PostStoreの変更を検知
         PostStore.shared.$posts
             .assign(to: &$allPosts)
-        
-        // UserStoreの変更を検知して自分自身のプロパティを更新する
+
         UserStore.shared.$profile
             .assign(to: &$userProfile)
-        
-        loadMockFriends()
+
+        FriendStore.shared.$friendships
+            .map { $0.map { Friend(from: $0) } }
+            .assign(to: &$friends)
     }
-    
-    private func loadMockFriends() {
-        friends = []
+
+    func loadFriends() async {
+        await FriendStore.shared.loadFromAPI()
     }
 
     var myPosts: [PostModel] {
-        allPosts.filter { $0.userId == userProfile.id }
-    }
-    
-    var likedPosts: [PostModel] {
-        allPosts.filter { $0.isLiked }
-    }
-    
-    var savedPosts: [PostModel] {
-        allPosts.filter { $0.isSaved }
+        let myId = UserStore.shared.currentUser?.id ?? ""
+        return allPosts.filter { $0.authorId == myId }
     }
 
-    var friendsCount: Int {
-        friends.filter { $0.isFriend }.count
-    }
-    var postsCount: Int {
-        myPosts.count
-    }
-    
+    var likedPosts: [PostModel]  { allPosts.filter { $0.isLiked } }
+    var savedPosts: [PostModel]  { allPosts.filter { $0.isSaved } }
+
+    var friendsCount: Int { friends.filter { $0.isApproved }.count }
+    var postsCount: Int   { myPosts.count }
+
     func switchTab(to index: Int) {
-        withAnimation {
-            selectedTab = index
+        withAnimation { selectedTab = index }
+    }
+
+    func respondToFriend(friendshipId: String, approved: Bool) {
+        Task {
+            do {
+                try await FriendStore.shared.respond(
+                    friendshipId: friendshipId,
+                    status: approved ? "approved" : "rejected"
+                )
+                displayToast(message: approved ? "友達申請を承認しました" : "友達申請を拒否しました")
+            } catch let error as APIError {
+                displayToast(message: error.localizedDescription ?? "エラーが発生しました")
+            }
         }
     }
-    
-    func toggleFriendStatus(for friendId: UUID) {
-        if let index = friends.firstIndex(where: { $0.id == friendId }) {
-            friends[index].isFriend.toggle()
-            let friend = friends[index]
-            displayToast(message: friend.isFriend ? "\(friend.name) さんを友達に追加しました" : "\(friend.name) さんを友達から解除しました")
-        }
-    }
-    
+
     func toggleLike(for post: PostModel) {
         PostStore.shared.toggleLike(for: post.id)
     }
-    
+
     func toggleSave(for post: PostModel) {
         PostStore.shared.toggleSave(for: post.id)
     }
@@ -84,20 +78,26 @@ class AccountViewModel: ObservableObject {
         )
         displayToast(message: "プロフィールを更新しました")
     }
-    
+
+    func saveVisibility(_ visibility: String) {
+        Task {
+            do {
+                try await UserStore.shared.updateVisibility(visibility)
+                displayToast(message: "公開設定を更新しました")
+            } catch let error as APIError {
+                displayToast(message: error.localizedDescription ?? "エラーが発生しました")
+            }
+        }
+    }
+
     private func displayToast(message: String) {
         toastMessage = message
-        withAnimation(.easeOut(duration: 0.3)) {
-            showToast = true
-        }
-        
+        withAnimation(.easeOut(duration: 0.3)) { showToast = true }
         toastTask?.cancel()
         toastTask = Task {
             try? await Task.sleep(nanoseconds: 2_500_000_000)
             if !Task.isCancelled {
-                withAnimation(.easeIn(duration: 0.3)) {
-                    self.showToast = false
-                }
+                withAnimation(.easeIn(duration: 0.3)) { self.showToast = false }
             }
         }
     }

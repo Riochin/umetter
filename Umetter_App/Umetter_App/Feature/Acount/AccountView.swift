@@ -100,8 +100,34 @@ struct AccountView: View {
                                 } else {
                                     VStack(spacing: 8) {
                                         ForEach($viewModel.friends) { $friend in
-                                            FriendRowView(friend: $friend) {
-                                                viewModel.toggleFriendStatus(for: friend.id)
+                                            VStack(spacing: 0) {
+                                                FriendRowView(friend: $friend) {}
+                                                if friend.isPending,
+                                                   friend.addresseeId == (UserStore.shared.currentUser?.id ?? "") {
+                                                    HStack(spacing: 8) {
+                                                        Button("承認") {
+                                                            viewModel.respondToFriend(friendshipId: friend.friendshipId, approved: true)
+                                                        }
+                                                        .font(.system(size: 13, weight: .bold))
+                                                        .foregroundColor(.white)
+                                                        .padding(.horizontal, 20)
+                                                        .padding(.vertical, 6)
+                                                        .background(Color.umeRed)
+                                                        .cornerRadius(12)
+
+                                                        Button("拒否") {
+                                                            viewModel.respondToFriend(friendshipId: friend.friendshipId, approved: false)
+                                                        }
+                                                        .font(.system(size: 13, weight: .bold))
+                                                        .foregroundColor(.textGray)
+                                                        .padding(.horizontal, 20)
+                                                        .padding(.vertical, 6)
+                                                        .background(Color.cardBg)
+                                                        .cornerRadius(12)
+                                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.borderColor, lineWidth: 1))
+                                                    }
+                                                    .padding(.bottom, 8)
+                                                }
                                             }
                                         }
                                     }
@@ -136,6 +162,9 @@ struct AccountView: View {
         }
         .sheet(isPresented: $viewModel.showingEditProfile) {
             EditProfileView(viewModel: viewModel)
+        }
+        .task {
+            await viewModel.loadFriends()
         }
     }
 }

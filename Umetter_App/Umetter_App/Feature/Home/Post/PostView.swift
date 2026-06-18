@@ -5,9 +5,9 @@ struct PostView: View {
     @StateObject private var viewModel = PostViewModel()
     @Environment(\.dismiss) private var dismiss
     
-    let onPost: (PostModel) -> Void
-    
-    init(onPost: @escaping (PostModel) -> Void = { _ in }) {
+    var onPost: () -> Void
+
+    init(onPost: @escaping () -> Void = {}) {
         self.onPost = onPost
     }
     
@@ -41,11 +41,16 @@ struct PostView: View {
                 
                 // 投稿ボタン
                 Button(action: {
-                    if let newPost = viewModel.submitPost() {
-                        onPost(newPost)
-                        dismiss()
-                    }else{
-                        print("エラー: newPostが作られませんでした")
+                    Task {
+                        do {
+                            try await viewModel.submitPost()
+                            onPost()
+                            dismiss()
+                        } catch let error as APIError {
+                            viewModel.errorMessage = error.localizedDescription
+                        } catch {
+                            viewModel.errorMessage = "投稿に失敗しました"
+                        }
                     }
                 }) {
                     Text("投稿")

@@ -3,21 +3,21 @@ import SwiftUI
 struct PostCardView: View {
     let post: PostModel
     let now: Date = Date()
-    
+
     var onLike: () -> Void
     var onSave: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(post.userName).font(.subheadline).fontWeight(.bold).foregroundColor(.textDark)
+                Text("匿名").font(.subheadline).fontWeight(.bold).foregroundColor(.textDark)
                 Text(post.timeAgo(from: now)).font(.caption).foregroundColor(.textLight)
                 Spacer()
                 Button(action: {}) { Image(systemName: "ellipsis").foregroundColor(.textLight) }
             }
-            
-            Text(post.content).font(.subheadline).foregroundColor(.textDark).lineSpacing(4)
-            
+
+            Text(post.body).font(.subheadline).foregroundColor(.textDark).lineSpacing(4)
+
             if !post.tags.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(post.tags, id: \.self) { tag in
@@ -25,7 +25,7 @@ struct PostCardView: View {
                     }
                 }
             }
-            
+
             HStack(spacing: 0) {
                 Image(systemName: "bubble.right")
                     .font(.system(size: 18)).foregroundColor(.textLight)
