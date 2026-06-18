@@ -14,11 +14,7 @@ struct AccountView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.umeRed)
                     Spacer()
-                    Button(action: {}) {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(.textLight)
-                            .font(.system(size: 22))
-                    }
+                    
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
@@ -30,9 +26,11 @@ struct AccountView: View {
                     VStack(spacing: 16) {
                         // プロフィールカード
                         ProfileSectionView(
+                            profile: viewModel.userProfile,
                             friendsCount: viewModel.friendsCount,
                             postsCount: viewModel.postsCount,
-                            onFriendsTapped: { viewModel.switchTab(to: 3) }
+                            onFriendsTapped: { viewModel.switchTab(to: 3) },
+                            onEditTapped: { viewModel.showingEditProfile = true }
                         )
                         
                         // コンテンツ切り替えタブ
@@ -53,20 +51,47 @@ struct AccountView: View {
                                         .foregroundColor(.textLight)
                                         .padding(.top, 32)
                                 } else {
-                                    ForEach($viewModel.myPosts) { $post in
-                                        PostCardView(post: $post)
+                                    ForEach(viewModel.myPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
                                     }
                                 }
                             } else if viewModel.selectedTab == 1 {
-                                ForEach($viewModel.likedPosts) { $post in
-                                    PostCardView(post: $post)
+                                // 💡 いいねリストが空のときの表示を追加
+                                if viewModel.likedPosts.isEmpty {
+                                    Text("いいねした投稿はありません")
+                                        .font(.footnote)
+                                        .foregroundColor(.textLight)
+                                        .padding(.top, 32)
+                                } else {
+                                    ForEach(viewModel.likedPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
+                                    }
                                 }
                             } else if viewModel.selectedTab == 2 {
-                                ForEach($viewModel.savedPosts) { $post in
-                                    PostCardView(post: $post)
+                                // 💡 保存リストが空のときの表示を追加
+                                if viewModel.savedPosts.isEmpty {
+                                    Text("保存した投稿はありません")
+                                        .font(.footnote)
+                                        .foregroundColor(.textLight)
+                                        .padding(.top, 32)
+                                } else {
+                                    ForEach(viewModel.savedPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
+                                    }
                                 }
                             } else if viewModel.selectedTab == 3 {
-                                // 💡 修正: 友達が空のときの表示を追加しました
                                 if viewModel.friends.isEmpty {
                                     Text("友達はいません")
                                         .font(.footnote)
@@ -100,7 +125,7 @@ struct AccountView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        .background(Color(hex: "1F2937").opacity(0.9))
+                        .background(Color.textDark.opacity(0.9))
                         .cornerRadius(20)
                         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 4)
                         .padding(.bottom, 100)
@@ -108,6 +133,9 @@ struct AccountView: View {
                 }
                 .zIndex(100)
             }
+        }
+        .sheet(isPresented: $viewModel.showingEditProfile) {
+            EditProfileView(viewModel: viewModel)
         }
     }
 }

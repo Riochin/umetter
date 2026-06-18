@@ -25,12 +25,7 @@ extension Color {
                 int & 0xFF
             )
         case 8:
-            (a, r, g, b) = (
-                int >> 24,
-                int >> 16 & 0xFF,
-                int >> 8 & 0xFF,
-                int & 0xFF
-            )
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (255, 255, 255, 255)
         }
@@ -48,9 +43,7 @@ extension Color {
 // MARK: - App Theme Colors
 extension Color {
     // Brand Colors
-    static let tsudaRed = Color(hex: "8B1E38")
     static let umeRed = Color(hex: "8B1E38")
-    static let warmBg = Color(hex: "F8F4F0")
     static let umeBackground = Color(hex: "F8F4F0")
     
     // UI Colors
@@ -58,7 +51,6 @@ extension Color {
     static let textDark = Color(hex: "1F2937")
     static let textGray = Color(hex: "4B5563")
     static let textLight = Color(hex: "9CA3AF")
-    static let borderLine = Color(hex: "E8DFD8")
     static let borderColor = Color(hex: "E5E7EB")
     static let cardBg = Color.white
     

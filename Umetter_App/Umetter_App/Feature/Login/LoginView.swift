@@ -13,7 +13,7 @@ struct LoginView: View {
                 MainTabView(initialTab: 1)
             } else {
                 ZStack {
-                    Color.warmBg.ignoresSafeArea()
+                    Color.umeBackground.ignoresSafeArea()
                     
                     VStack(spacing: 0) {
                         Spacer()
@@ -21,7 +21,7 @@ struct LoginView: View {
                         // メインロゴ・ヘッダー
                         VStack(spacing: 16) {
                             UmeFlowerView(size: 112)
-                                .shadow(color: Color.tsudaRed.opacity(0.15), radius: 10, x: 0, y: 10)
+                                .shadow(color: Color.umeRed.opacity(0.15), radius: 10, x: 0, y: 10)
                                 .offset(y: isBouncing ? -15 : 0)
                                 .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: isBouncing)
                                 .onAppear { isBouncing = true }
@@ -29,16 +29,16 @@ struct LoginView: View {
                             VStack(spacing: 4) {
                                 Text("うめったー")
                                     .font(.system(size: 30, weight: .black))
-                                    .foregroundColor(.tsudaRed)
+                                    .foregroundColor(.umeRed)
                                     .kerning(2.0)
                                 Text("津田塾大学 ポータルログイン")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.tsudaRed.opacity(0.9))
+                                    .foregroundColor(.umeRed.opacity(0.9))
                                     .kerning(1.0)
                             }
                             
                             RoundedRectangle(cornerRadius: 1)
-                                .fill(Color.tsudaRed.opacity(0.3))
+                                .fill(Color.umeRed.opacity(0.3))
                                 .frame(width: 64, height: 2)
                         }
                         .padding(.bottom, 48)
@@ -61,7 +61,7 @@ struct LoginView: View {
                             .padding(14)
                             .background(Color.white)
                             .cornerRadius(16)
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.borderLine, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.borderColor, lineWidth: 1))
                             .shadow(color: Color.black.opacity(0.02), radius: 2, y: 1)
                             
                             // パスワード
@@ -86,7 +86,7 @@ struct LoginView: View {
                             .padding(14)
                             .background(Color.white)
                             .cornerRadius(16)
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.borderLine, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.borderColor, lineWidth: 1))
                             .shadow(color: Color.black.opacity(0.02), radius: 2, y: 1)
                             
                             // ログインボタン
@@ -105,10 +105,10 @@ struct LoginView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(Color.tsudaRed)
+                                .background(Color.umeRed)
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
-                                .shadow(color: Color.tsudaRed.opacity(0.1), radius: 5, y: 3)
+                                .shadow(color: Color.umeRed.opacity(0.1), radius: 5, y: 3)
                             }
                             .disabled(viewModel.isLoading)
                         }

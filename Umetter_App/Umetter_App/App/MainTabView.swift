@@ -7,15 +7,10 @@ struct MainTabView: View {
     // 現在選択されているタブ
     @State private var selectedTab: Int
     
-    // 各タブで使うViewModelを定義
-    @State private var homeViewModel: HomeViewModel
     // 今後、時間割や通知の機能を作る際に以下のように追加していきます
-    // @State private var calendarViewModel: CalendarViewModel
-    // @State private var notificationViewModel: NotificationViewModel
+    // @StateObject private var calendarViewModel = CalendarViewModel()
 
     init(initialTab: Int = 1) {
-        // ViewModelの初期化
-        _homeViewModel = State(initialValue: HomeViewModel())
         // 初期タブの設定（デフォルトはカレンダー/時間割: 1）
         _selectedTab = State(initialValue: initialTab)
     }

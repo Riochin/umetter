@@ -1,15 +1,18 @@
 import SwiftUI
 
 struct ProfileSectionView: View {
+    let profile: UserProfile
+    
     let friendsCount: Int
     let postsCount: Int
     var onFriendsTapped: () -> Void
+    var onEditTapped: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
                 Circle()
-                    .fill(Color(hex: "E5E7EB"))
+                    .fill(profile.iconColor)
                     .frame(width: 72, height: 72)
                     .overlay(
                         Image(systemName: "person.fill")
@@ -20,24 +23,36 @@ struct ProfileSectionView: View {
                     )
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("あなた（匿名）")
+                    // 名前
+                    Text(profile.name.isEmpty ? "名前未設定" : profile.name)
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundColor(.textDark)
-                    Text("学芸学部 情報科学科")
-                        .font(.subheadline)
-                        .foregroundColor(.textGray)
-                    Text("2024年度入学")
-                        .font(.caption)
-                        .foregroundColor(.textLight)
+                        .foregroundColor(profile.name.isEmpty ? .textLight : .textDark)
+                    
+                    // 学部 (設定されている場合のみ表示)
+                    if !profile.department.isEmpty {
+                        Text(profile.department)
+                            .font(.subheadline)
+                            .foregroundColor(.textGray)
+                    }
+                    
+                    // 入学年度 (設定されている場合のみ表示)
+                    if !profile.enrollmentYear.isEmpty {
+                        Text(profile.enrollmentYear)
+                            .font(.caption)
+                            .foregroundColor(.textLight)
+                    }
                 }
                 Spacer()
             }
             
-            Text("よろしくお願いします！アプリ開発の勉強中です📝")
-                .font(.subheadline)
-                .foregroundColor(.textDark)
-                .lineSpacing(4)
+            // 自己紹介 (設定されている場合のみ表示)
+            if !profile.bio.isEmpty {
+                Text(profile.bio)
+                    .font(.subheadline)
+                    .foregroundColor(.textDark)
+                    .lineSpacing(4)
+            }
             
             HStack(spacing: 16) {
                 Button(action: onFriendsTapped) {
@@ -53,7 +68,7 @@ struct ProfileSectionView: View {
                 }
             }
             
-            Button(action: {}) {
+            Button(action: onEditTapped) { // 💡 アクションをセット
                 Text("プロフィールを編集")
                     .font(.subheadline)
                     .fontWeight(.bold)

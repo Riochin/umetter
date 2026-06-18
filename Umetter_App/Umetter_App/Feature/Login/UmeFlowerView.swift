@@ -57,7 +57,7 @@ struct UmeFlowerView_Previews: PreviewProvider {
     static var previews: some View {
         UmeFlowerView()
             .padding()
-            .background(Color.warmBg)
+            .background(Color.umeBackground)
             .previewLayout(.sizeThatFits)
     }
 }

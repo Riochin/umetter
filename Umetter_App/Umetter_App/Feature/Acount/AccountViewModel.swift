@@ -3,36 +3,54 @@ import Combine
 
 @MainActor
 class AccountViewModel: ObservableObject {
-    // タブ状態
     @Published var selectedTab = 0
-    
-    // トースト通知状態
     @Published var showToast = false
     @Published var toastMessage = ""
     private var toastTask: Task<Void, Never>? = nil
     
-    // 💡 修正: 友達の仮データを削除して空配列にしました
+    @Published var userProfile: UserProfile = UserStore.shared.profile
+    @Published var showingEditProfile = false
     @Published var friends: [Friend] = []
     
-    @Published var myPosts: [AccountPost] = []
+    // PostStoreとUserStoreを監視するための仕組み
+    private var cancellables = Set<AnyCancellable>()
     
-    @Published var likedPosts: [AccountPost] = [
-        AccountPost(author: "名無しさん", timeAgo: "1日前", content: "明日の1限休講らしい！サイト確認してみて！", tags: ["#休講情報"], likes: 12, isLiked: true)
-    ]
+    @Published var allPosts: [PostModel] = []
+
+    init() {
+        // PostStoreの変更を検知
+        PostStore.shared.$posts
+            .assign(to: &$allPosts)
+        
+        // UserStoreの変更を検知して自分自身のプロパティを更新する
+        UserStore.shared.$profile
+            .assign(to: &$userProfile)
+        
+        loadMockFriends()
+    }
     
-    @Published var savedPosts: [AccountPost] = [
-        AccountPost(author: "名無しさん", timeAgo: "3日前", content: "お勧めの一般教養の授業教えてください🙏\nできればレポート少なめのやつで...", tags: ["#質問", "#履修登録"], likes: 3, isSaved: true)
-    ]
+    private func loadMockFriends() {
+        friends = []
+    }
+
+    var myPosts: [PostModel] {
+        allPosts.filter { $0.userId == userProfile.id }
+    }
     
-    // 統計情報（計算プロパティ）
+    var likedPosts: [PostModel] {
+        allPosts.filter { $0.isLiked }
+    }
+    
+    var savedPosts: [PostModel] {
+        allPosts.filter { $0.isSaved }
+    }
+
     var friendsCount: Int {
         friends.filter { $0.isFriend }.count
     }
     var postsCount: Int {
         myPosts.count
     }
-    
-    // MARK: - Actions
     
     func switchTab(to index: Int) {
         withAnimation {
@@ -46,6 +64,25 @@ class AccountViewModel: ObservableObject {
             let friend = friends[index]
             displayToast(message: friend.isFriend ? "\(friend.name) さんを友達に追加しました" : "\(friend.name) さんを友達から解除しました")
         }
+    }
+    
+    func toggleLike(for post: PostModel) {
+        PostStore.shared.toggleLike(for: post.id)
+    }
+    
+    func toggleSave(for post: PostModel) {
+        PostStore.shared.toggleSave(for: post.id)
+    }
+
+    func saveProfile(name: String, department: String, enrollmentYear: String, bio: String, iconColor: Color) {
+        UserStore.shared.updateProfile(
+            name: name,
+            department: department,
+            enrollmentYear: enrollmentYear,
+            bio: bio,
+            iconColor: iconColor
+        )
+        displayToast(message: "プロフィールを更新しました")
     }
     
     private func displayToast(message: String) {

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class PostViewModel: ObservableObject {
     
     @Published var content: String = ""
@@ -69,9 +70,12 @@ class PostViewModel: ObservableObject {
         repository.saveTags(addedTags)
         loadSuggestedTags()
         
+        let profile = UserStore.shared.profile
+        
         let newPost = PostModel(
             id: UUID(),
-            userName: "名無しさん",
+            userId: profile.id,
+            userName: profile.name,
             createdAt: Date(),
             content: content,
             tags: addedTags,
