@@ -50,8 +50,10 @@ class PostViewModel: ObservableObject {
         errorMessage = nil
         defer { isSubmitting = false }
 
-        let category = addedTags.first?
+        let validCategories = Set(["all", "department", "circle", "faculty", "year"])
+        let rawCategory = addedTags.first?
             .replacingOccurrences(of: "^#+", with: "", options: .regularExpression) ?? "all"
+        let category = validCategories.contains(rawCategory) ? rawCategory : "all"
 
         repository.saveTags(addedTags)
         loadSuggestedTags()
