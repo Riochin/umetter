@@ -20,4 +20,19 @@ type Repository interface {
 	GetEmailVerificationCodeHash(email string) (string, string, error)
 	MarkEmailVerified(email string) error
 	IsEmailVerified(email string) (bool, error)
+
+	// Classes & timetables
+	SearchClasses(keyword string) ([]domain.Class, error)
+	GetClassByID(id string) (*domain.Class, error)
+	CreateTimetableEntry(entry *domain.UserTimetable) error
+	ListTimetable(userID string) ([]domain.TimetableEntry, error)
+	GetTimetableEntryByID(id string) (*domain.UserTimetable, error)
+	UpdateTimetableEntry(entry *domain.UserTimetable) error
+
+	// Friendships
+	CreateFriendship(f *domain.Friendship) error
+	GetFriendshipByID(id string) (*domain.Friendship, error)
+	UpdateFriendshipStatus(id, status string) error
+	ListFriendships(userID string) ([]domain.Friendship, error)
+	GetApprovedFriendship(userA, userB string) (*domain.Friendship, error)
 }

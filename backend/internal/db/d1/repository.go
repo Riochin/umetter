@@ -58,3 +58,34 @@ func (r *Repository) MarkEmailVerified(_ string) error {
 func (r *Repository) IsEmailVerified(_ string) (bool, error) {
 	return false, errNotImplemented
 }
+
+func (r *Repository) SearchClasses(_ string) ([]domain.Class, error) { return nil, errNotImplemented }
+func (r *Repository) GetClassByID(_ string) (*domain.Class, error)   { return nil, errNotImplemented }
+
+func (r *Repository) CreateTimetableEntry(_ *domain.UserTimetable) error { return errNotImplemented }
+
+func (r *Repository) ListTimetable(_ string) ([]domain.TimetableEntry, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) GetTimetableEntryByID(_ string) (*domain.UserTimetable, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) UpdateTimetableEntry(_ *domain.UserTimetable) error { return errNotImplemented }
+
+func (r *Repository) CreateFriendship(_ *domain.Friendship) error { return errNotImplemented }
+
+func (r *Repository) GetFriendshipByID(_ string) (*domain.Friendship, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) UpdateFriendshipStatus(_, _ string) error { return errNotImplemented }
+
+func (r *Repository) ListFriendships(_ string) ([]domain.Friendship, error) {
+	return nil, errNotImplemented
+}
+
+func (r *Repository) GetApprovedFriendship(_, _ string) (*domain.Friendship, error) {
+	return nil, errNotImplemented
+}

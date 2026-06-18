@@ -21,13 +21,27 @@ func New(repo repository.Repository, cfg *config.Config) *gin.Engine {
 
 	meH := handler.NewMeHandler(repo)
 	postH := handler.NewPostHandler(repo)
+	classH := handler.NewClassHandler(repo)
+	timetableH := handler.NewTimetableHandler(repo)
+	friendH := handler.NewFriendHandler(repo)
 
 	protected := v1.Group("")
 	protected.Use(middleware.JWTAuth(cfg.JWTSecret))
 	protected.GET("/me", meH.GetMe)
+	protected.PATCH("/me/visibility", meH.UpdateVisibility)
 	protected.GET("/posts", postH.ListPosts)
 	protected.POST("/posts", postH.CreatePost)
 	protected.POST("/posts/:id/report", postH.ReportPost)
+
+	protected.GET("/classes", classH.Search)
+	protected.POST("/timetables", timetableH.Create)
+	protected.GET("/timetables", timetableH.List)
+	protected.PATCH("/timetables/:id", timetableH.Update)
+
+	protected.POST("/friends/request", friendH.Request)
+	protected.GET("/friends", friendH.List)
+	protected.PATCH("/friends/:id", friendH.Respond)
+	protected.GET("/friends/:id/timetable", friendH.GetTimetable)
 
 	return r
 }
