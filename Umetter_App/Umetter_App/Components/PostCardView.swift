@@ -1,22 +1,28 @@
 import SwiftUI
 
 struct PostCardView: View {
-    @Binding var post: AccountPost
+    let post: PostModel
+    let now: Date = Date()
+    
+    var onLike: () -> Void
+    var onSave: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(post.author).font(.subheadline).fontWeight(.bold).foregroundColor(.textDark)
-                Text(post.timeAgo).font(.caption).foregroundColor(.textLight)
+                Text(post.userName).font(.subheadline).fontWeight(.bold).foregroundColor(.textDark)
+                Text(post.timeAgo(from: now)).font(.caption).foregroundColor(.textLight)
                 Spacer()
                 Button(action: {}) { Image(systemName: "ellipsis").foregroundColor(.textLight) }
             }
             
             Text(post.content).font(.subheadline).foregroundColor(.textDark).lineSpacing(4)
             
-            HStack(spacing: 8) {
-                ForEach(post.tags, id: \.self) { tag in
-                    Text(tag).font(.caption).fontWeight(.bold).foregroundColor(.umeRed)
+            if !post.tags.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(post.tags, id: \.self) { tag in
+                        Text(tag).font(.caption).fontWeight(.bold).foregroundColor(.umeRed)
+                    }
                 }
             }
             
@@ -24,19 +30,15 @@ struct PostCardView: View {
                 Image(systemName: "bubble.right")
                     .font(.system(size: 18)).foregroundColor(.textLight)
                 Spacer()
-                Button(action: {
-                    post.isLiked.toggle()
-                    post.likes += post.isLiked ? 1 : -1
-                }) {
+                Button(action: onLike) {
                     HStack(spacing: 6) {
-                        Image(systemName: post.isLiked ? "heart.fill" : "heart")
-                            .font(.system(size: 18)).foregroundColor(post.isLiked ? .umeRed : .textLight)
-                        Text("\(post.likes)")
+                        UmeIcon(isLiked: post.isLiked)
+                        Text("\(post.likesCount)")
                             .font(.caption).fontWeight(.bold).foregroundColor(post.isLiked ? .umeRed : .textLight)
                     }
                 }
                 Spacer()
-                Button(action: { post.isSaved.toggle() }) {
+                Button(action: onSave) {
                     Image(systemName: post.isSaved ? "bookmark.fill" : "bookmark")
                         .font(.system(size: 18)).foregroundColor(post.isSaved ? .umeRed : .textLight)
                 }

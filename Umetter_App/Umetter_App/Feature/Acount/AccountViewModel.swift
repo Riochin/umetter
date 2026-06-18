@@ -3,32 +3,47 @@ import Combine
 
 @MainActor
 class AccountViewModel: ObservableObject {
-
     @Published var selectedTab = 0
-    
-
     @Published var showToast = false
     @Published var toastMessage = ""
     private var toastTask: Task<Void, Never>? = nil
     
-    
-    @Published var userProfile = UserProfile(
-        name: "",
-        department: "",
-        enrollmentYear: "",
-        bio: "",
-        iconColor: Color.borderColor
-    )
-    
-  
+    @Published var userProfile: UserProfile = UserStore.shared.profile
     @Published var showingEditProfile = false
-    
-
     @Published var friends: [Friend] = []
-    @Published var myPosts: [AccountPost] = []
-    @Published var likedPosts: [AccountPost] = []
-    @Published var savedPosts: [AccountPost] = []
     
+    // PostStoreとUserStoreを監視するための仕組み
+    private var cancellables = Set<AnyCancellable>()
+    
+    @Published var allPosts: [PostModel] = []
+
+    init() {
+        // PostStoreの変更を検知
+        PostStore.shared.$posts
+            .assign(to: &$allPosts)
+        
+        // UserStoreの変更を検知して自分自身のプロパティを更新する
+        UserStore.shared.$profile
+            .assign(to: &$userProfile)
+        
+        loadMockFriends()
+    }
+    
+    private func loadMockFriends() {
+        friends = []
+    }
+
+    var myPosts: [PostModel] {
+        allPosts.filter { $0.userId == userProfile.id }
+    }
+    
+    var likedPosts: [PostModel] {
+        allPosts.filter { $0.isLiked }
+    }
+    
+    var savedPosts: [PostModel] {
+        allPosts.filter { $0.isSaved }
+    }
 
     var friendsCount: Int {
         friends.filter { $0.isFriend }.count
@@ -36,8 +51,6 @@ class AccountViewModel: ObservableObject {
     var postsCount: Int {
         myPosts.count
     }
-    
-    // MARK: - Actions
     
     func switchTab(to index: Int) {
         withAnimation {
@@ -53,14 +66,22 @@ class AccountViewModel: ObservableObject {
         }
     }
     
+    func toggleLike(for post: PostModel) {
+        PostStore.shared.toggleLike(for: post.id)
+    }
+    
+    func toggleSave(for post: PostModel) {
+        PostStore.shared.toggleSave(for: post.id)
+    }
 
     func saveProfile(name: String, department: String, enrollmentYear: String, bio: String, iconColor: Color) {
-        userProfile.name = name
-        userProfile.department = department
-        userProfile.enrollmentYear = enrollmentYear
-        userProfile.bio = bio
-        userProfile.iconColor = iconColor
-        
+        UserStore.shared.updateProfile(
+            name: name,
+            department: department,
+            enrollmentYear: enrollmentYear,
+            bio: bio,
+            iconColor: iconColor
+        )
         displayToast(message: "プロフィールを更新しました")
     }
     

@@ -24,34 +24,20 @@ struct ProfileSectionView: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     // 名前
-                    if profile.name.isEmpty {
-                        Text("名前未設定")
-                            .font(.title3)
-                            .foregroundColor(.textLight)
-                    } else {
-                        Text(profile.name)
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.textDark)
-                    }
+                    Text(profile.name.isEmpty ? "名前未設定" : profile.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(profile.name.isEmpty ? .textLight : .textDark)
                     
-                    // 学部
-                    if profile.department.isEmpty {
-                        Text("学部・学科未設定")
-                            .font(.subheadline)
-                            .foregroundColor(.textLight)
-                    } else {
+                    // 学部 (設定されている場合のみ表示)
+                    if !profile.department.isEmpty {
                         Text(profile.department)
                             .font(.subheadline)
                             .foregroundColor(.textGray)
                     }
                     
-                    // 入学年度
-                    if profile.enrollmentYear.isEmpty {
-                        Text("入学年度未設定")
-                            .font(.caption)
-                            .foregroundColor(.textLight)
-                    } else {
+                    // 入学年度 (設定されている場合のみ表示)
+                    if !profile.enrollmentYear.isEmpty {
                         Text(profile.enrollmentYear)
                             .font(.caption)
                             .foregroundColor(.textLight)
@@ -60,13 +46,8 @@ struct ProfileSectionView: View {
                 Spacer()
             }
             
-            // 自己紹介
-            if profile.bio.isEmpty {
-                Text("自己紹介はまだ設定されていません。")
-                    .font(.subheadline)
-                    .foregroundColor(.textLight)
-                    .lineSpacing(4)
-            } else {
+            // 自己紹介 (設定されている場合のみ表示)
+            if !profile.bio.isEmpty {
                 Text(profile.bio)
                     .font(.subheadline)
                     .foregroundColor(.textDark)

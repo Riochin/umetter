@@ -14,11 +14,7 @@ struct AccountView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.umeRed)
                     Spacer()
-                    Button(action: {}) {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(.textLight)
-                            .font(.system(size: 22))
-                    }
+                    
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
@@ -55,8 +51,12 @@ struct AccountView: View {
                                         .foregroundColor(.textLight)
                                         .padding(.top, 32)
                                 } else {
-                                    ForEach($viewModel.myPosts) { $post in
-                                        PostCardView(post: $post)
+                                    ForEach(viewModel.myPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
                                     }
                                 }
                             } else if viewModel.selectedTab == 1 {
@@ -67,8 +67,12 @@ struct AccountView: View {
                                         .foregroundColor(.textLight)
                                         .padding(.top, 32)
                                 } else {
-                                    ForEach($viewModel.likedPosts) { $post in
-                                        PostCardView(post: $post)
+                                    ForEach(viewModel.likedPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
                                     }
                                 }
                             } else if viewModel.selectedTab == 2 {
@@ -79,8 +83,12 @@ struct AccountView: View {
                                         .foregroundColor(.textLight)
                                         .padding(.top, 32)
                                 } else {
-                                    ForEach($viewModel.savedPosts) { $post in
-                                        PostCardView(post: $post)
+                                    ForEach(viewModel.savedPosts) { post in
+                                        PostCardView(
+                                            post: post,
+                                            onLike: { viewModel.toggleLike(for: post) },
+                                            onSave: { viewModel.toggleSave(for: post) }
+                                        )
                                     }
                                 }
                             } else if viewModel.selectedTab == 3 {

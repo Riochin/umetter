@@ -2,6 +2,7 @@ import Foundation
 
 struct PostModel: Identifiable {
     let id: UUID
+    let userId: UUID
     let userName: String
     let createdAt: Date
     let content: String
