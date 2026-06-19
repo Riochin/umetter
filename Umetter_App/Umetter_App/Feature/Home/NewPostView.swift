@@ -7,19 +7,37 @@ struct NewPostView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            
             // ヘッダー（名前・時間・メニュー）
             HStack {
                 Text(post.userName)
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
+                
                 Text(post.timeAgo(from: now))
                     .font(.caption)
                     .foregroundColor(.gray)
+                
                 Spacer()
-                Button(action: {}) {
+                
+                // ブロック・通報メニュー
+                Menu {
+                    Button(role: .destructive, action: {
+                        // TODO: ブロック処理
+                    }) {
+                        Label("ブロック", systemImage: "person.crop.circle.badge.xmark")
+                    }
+                    
+                    Button(role: .destructive, action: {
+                        // TODO: 通報処理
+                    }) {
+                        Label("通報", systemImage: "flag")
+                    }
+                } label: {
                     Image(systemName: "ellipsis")
                         .foregroundColor(.gray)
+                        .padding(4)
                 }
             }
             
@@ -40,20 +58,27 @@ struct NewPostView: View {
                 }
             }
             
-            // 画像プレビュー (仮)
+            // 画像プレビュー（仮）
             if post.imageUrl != nil {
                 Rectangle()
                     .fill(Color.gray.opacity(0.2))
                     .frame(height: 160)
                     .cornerRadius(10)
                     .overlay(
-                        Text("画像プレビュー").foregroundColor(.gray)
+                        Text("画像プレビュー")
+                            .foregroundColor(.gray)
                     )
             }
             
             // アクションボタン
             HStack {
-                Button(action: {}) { Image(systemName: "message").foregroundColor(.gray) }
+                Button(action: {
+                    // TODO: コメント処理
+                }) {
+                    Image(systemName: "message")
+                        .foregroundColor(.gray)
+                }
+                
                 Spacer()
                 
                 // 梅いいねボタン
@@ -62,6 +87,7 @@ struct NewPostView: View {
                 }) {
                     HStack(spacing: 4) {
                         UmeIcon(isLiked: post.isLiked)
+                        
                         if post.likesCount > 0 {
                             Text("\(post.likesCount)")
                                 .font(.caption)
@@ -80,9 +106,6 @@ struct NewPostView: View {
                     Image(systemName: post.isSaved ? "bookmark.fill" : "bookmark")
                         .foregroundColor(post.isSaved ? .umeRed : .gray)
                 }
-                
-                Spacer()
-                Button(action: {}) { Image(systemName: "square.and.arrow.up").foregroundColor(.gray) }
             }
             .padding(.horizontal, 8)
             .padding(.top, 4)
@@ -90,7 +113,12 @@ struct NewPostView: View {
         .padding()
         .background(Color.white.opacity(0.8))
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(
+            color: Color.black.opacity(0.05),
+            radius: 2,
+            x: 0,
+            y: 1
+        )
         .padding(.horizontal, 12)
     }
 }
