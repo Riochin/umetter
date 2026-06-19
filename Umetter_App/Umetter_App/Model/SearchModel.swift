@@ -4,6 +4,12 @@
 //
 //  Created by 小宮あかり on 2026/06/19.
 //
+//
+//  SearchModel.swift
+//  Umetter_App
+//
+//  Created by 小宮あかり on 2026/06/19.
+//
 import Foundation
 
 // MARK: - Search Models
@@ -20,3 +26,4 @@ enum SearchTab {
     case top        // トップ（いいね順）
     case latest     // 最新（時間順）
 }
+

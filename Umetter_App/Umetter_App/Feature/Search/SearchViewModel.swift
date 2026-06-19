@@ -1,3 +1,9 @@
+//
+//  SearchViewModel.swift
+//  Umetter_App
+//
+//  Created by 小宮あかり on 2026/06/19.
+//
 import SwiftUI
 import Foundation
 import Combine
